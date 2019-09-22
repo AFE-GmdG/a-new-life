@@ -1,7 +1,7 @@
 import { ApplicationService, IApplicationService } from "./services/applicationService";
 
 const swPromise: Promise<IApplicationService> = window.navigator.serviceWorker
-	? ApplicationService.create("sw.js")
+	? ApplicationService.create(process.env.NODE_ENV === "development" ? "sw.js" : "a-new-life/sw.js")
 	: Promise.reject();
 
 swPromise.then(applicationService => {
