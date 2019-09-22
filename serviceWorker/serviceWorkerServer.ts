@@ -397,9 +397,9 @@ export abstract class ServiceWorkerServer {
       (reason: any) => {
         if (LOG) console.warn("Offline result. The reason is ", reason);
         if (request.url.indexOf(`${self.location.origin}/api`) === 0) {
-          return self.caches.open("local").then(cache => cache.match("/offline.json"));
+          return self.caches.open("local").then(cache => cache.match("offline.json"));
         } else if (request.url.indexOf(`${self.location.origin}`) === 0) {
-          return self.caches.open("local").then(cache => cache.match("/offline.html"));
+          return self.caches.open("local").then(cache => cache.match("offline.html"));
         }
         return undefined;
       }
@@ -427,7 +427,7 @@ export abstract class ServiceWorkerServer {
 
   private checkForCacheUpdate(): Promise<any> {
     const self = this.serviceWorkerGlobalScope;
-    const origin = self.location.origin;
+    const origin = self.location.origin + self.location.pathname.substr(0, self.location.pathname.lastIndexOf("/"));
 
     return self.caches.open("local")
       .then(local => {
