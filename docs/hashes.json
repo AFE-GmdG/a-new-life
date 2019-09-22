@@ -3,11 +3,12 @@
 	"app.js": "5c543390",
 	"offline.json": "225e4ffa",
 	"sw.js": "3022837",
+	"assets/favicon.ico": "596d5edb",
 	"assets/style.css": "c054c12",
 	"assets/manifest.json": "393697ee",
 	"assets/icon-192.png": "613c97c5",
 	"assets/icon-512.png": "73b8633b",
 	"assets/hind-regular.ttf": "264f37b0",
-	"index.html": "106055a8",
-	"offline.html": "671d39c8"
+	"index.html": "1e0ee206",
+	"offline.html": "7918af38"
 }
