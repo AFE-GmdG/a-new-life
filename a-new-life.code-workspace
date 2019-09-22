@@ -1,0 +1,52 @@
+{
+	"folders": [{
+		"name": "A new Life",
+		"path": "."
+	}],
+
+	"settings": {
+		"editor.insertSpaces": false,
+		"editor.tabSize": 2,
+		"editor.scrollBeyondLastLine": true,
+		"editor.minimap.enabled": true,
+		"editor.wordWrap": "off",
+		"editor.formatOnType": true,
+		"editor.formatOnPaste": true,
+		"editor.suggestOnTriggerCharacters": true,
+		"editor.acceptSuggestionOnEnter": "smart",
+		"editor.tabCompletion": "on",
+		"editor.cursorBlinking": "smooth",
+		"editor.mouseWheelZoom": true,
+		"editor.renderWhitespace": "none",
+		"editor.renderIndentGuides": true,
+
+		"files.autoSave": "off",
+		"files.eol": "\n",
+		"files.trimTrailingWhitespace": true,
+		"files.insertFinalNewline": true,
+
+		"explorer.openEditors.visible": 0,
+
+		"git.enabled": true,
+		"git.autoRepositoryDetection": false,
+		"git.autorefresh": true,
+		"git.confirmSync": true,
+		"git.countBadge": "all",
+		"git.decorations.enabled": true,
+
+		"typescript.validate.enable": true,
+		"typescript.format.enable": true,
+		"typescript.referencesCodeLens.enabled": true,
+		"typescript.suggest.paths": true,
+		"typescript.tsc.autoDetect": "off",
+
+		"javascript.validate.enable": true,
+		"javascript.format.enable": true,
+
+		"grunt.autoDetect": "off",
+		"gulp.autoDetect": "off",
+		"jake.autoDetect": "off",
+
+		"svg.preview.background": "transparent"
+	}
+}

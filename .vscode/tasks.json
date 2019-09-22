@@ -1,0 +1,35 @@
+{
+	"version": "2.0.0",
+	"tasks": [{
+		"type": "npm",
+		"script": "start",
+		"problemMatcher": {
+			"owner": "webpack",
+			"fileLocation": "absolute",
+			"source": "webpack-dev-server",
+			"pattern": [{
+				"regexp": "^\\[tsl\\] ERROR in (.*)\\((\\d+),(\\d+)\\)$",
+				"file": 1,
+				"line": 2,
+				"column": 3
+			}, {
+				"regexp": "^\\s*(.*)$",
+				"message": 1
+			}],
+			"background": {
+				"activeOnStart": true,
+				"beginsPattern": "^.*: Compiling\\.\\.\\.$",
+				"endsPattern": "^.*: (?:Compiled successfully|Compiled with warnings|Failed to compile)\\.$"
+			}
+		},
+		"group": "none",
+		"presentation": {
+			"echo": true,
+			"reveal": "silent",
+			"focus": false,
+			"panel": "shared"
+		},
+		"isBackground": true,
+		"promptOnClose": false
+	}]
+}

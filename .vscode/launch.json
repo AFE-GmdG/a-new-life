@@ -1,0 +1,19 @@
+{
+	"version": "0.2.0",
+	"configurations": [{
+		"type": "chrome",
+		"request": "launch",
+		"name": "Start Webpack-Dev-Server",
+		"url": "http://localhost:8087",
+		"webRoot": "${workspaceFolder}/dist",
+		"preLaunchTask": "npm: start",
+		"runtimeArgs": [],
+		"breakOnLoad": false,
+		"breakOnLoadStrategy": "instrument",
+		"sourceMaps": true,
+		"sourceMapPathOverrides": {
+			"webpack:///./*": "${workspaceFolder}/src/*",
+			"webpack:///*": "*"
+		}
+	}]
+}

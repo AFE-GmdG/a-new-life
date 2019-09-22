@@ -1,0 +1,10 @@
+{
+  "name": "hash-assets-plugin",
+  "version": "1.0.0",
+  "description": "Webpack Plugin to generate a json file with hash values on all output files.",
+  "main": "index.js",
+  "author": "Andreas Friedel",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}

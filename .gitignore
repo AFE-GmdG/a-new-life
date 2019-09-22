@@ -1,0 +1,6 @@
+/lib/worker
+/node_modules
+*.7z
+*.zip
+*.tgz
+*.log
