@@ -7,6 +7,7 @@
 
 "use strict";
 
+const webpack = require("webpack");
 const TerserPlugin = require("terser-webpack-plugin");
 const terserOptions = require("./webpack.terser.js");
 const path = require("path");
@@ -58,5 +59,19 @@ module.exports = (env) => [{
 		namedModules: env !== "release",
 		minimize: env === "release",
 		minimizer: minimizer
-	}
+	},
+
+	plugins: (env === "release") ? [
+		new webpack.DefinePlugin({
+			"process.env": {
+				NODE_ENV: "'production'"
+			}
+		})
+	] : [
+		new webpack.DefinePlugin({
+			"process.env": {
+				NODE_ENV: "'development'"
+			}
+		})
+	]
 }];

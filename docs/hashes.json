@@ -1,13 +1,13 @@
 {
 	"runtime.js": "6cf9b795",
-	"app.js": "56fc9562",
+	"app.js": "5c543390",
 	"offline.json": "225e4ffa",
 	"sw.js": "969d7ce",
-	"assets/style.css": "531994ef",
 	"assets/manifest.json": "393697ee",
 	"assets/icon-192.png": "613c97c5",
 	"assets/icon-512.png": "73b8633b",
 	"assets/hind-regular.ttf": "264f37b0",
+	"assets/style.css": "c054c12",
 	"index.html": "25f28732",
 	"offline.html": "17ab2654"
 }
