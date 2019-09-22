@@ -427,7 +427,7 @@ export abstract class ServiceWorkerServer {
 
   private checkForCacheUpdate(): Promise<any> {
     const self = this.serviceWorkerGlobalScope;
-    const origin = self.location.origin + self.location.pathname.substr(0, self.location.pathname.lastIndexOf("/"));
+    const origin = self.location.origin + self.location.pathname.substr(0, self.location.pathname.lastIndexOf("/") + 1);
 
     return self.caches.open("local")
       .then(local => {
