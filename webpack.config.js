@@ -112,7 +112,7 @@ module.exports = (env) => [{
 			logLevel: "error"
 		}),
 		new HtmlWebpackPlugin({
-			baseUrl: env === "docs" ? "http://a-friedel.github.io/a-new-life/" : "/",
+			baseUrl: env === "docs" ? "https://a-friedel.github.io/a-new-life/" : "/",
 			filename: "index.html",
 			template: "index.html",
 			inject: "body",
@@ -122,7 +122,7 @@ module.exports = (env) => [{
 			}
 		}),
 		new HtmlWebpackPlugin({
-			baseUrl: env === "docs" ? "http://a-friedel.github.io/a-new-life/" : "/",
+			baseUrl: env === "docs" ? "https://a-friedel.github.io/a-new-life/" : "/",
 			filename: "offline.html",
 			template: "offline.html",
 			inject: "body",
