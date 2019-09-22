@@ -435,8 +435,8 @@ export abstract class ServiceWorkerServer {
         return Promise.all([
           local,
           local.keys(),
-          this.getHashJson(local.match("/hashes.json")),
-          this.getHashJson(fetch("/hashes.json", { credentials: "same-origin" }))
+          this.getHashJson(local.match("hashes.json")),
+          this.getHashJson(fetch("hashes.json", { credentials: "same-origin" }))
         ]);
       }).then(([local, localKeys, localHashes, serverHashes]) => {
 
@@ -522,7 +522,7 @@ export abstract class ServiceWorkerServer {
 
         return Promise.all([
           Promise.all(splittedToAdd.map(part => local.addAll(part.map(uri => new Request(uri, { credentials: "same-origin" }))))),
-          local.put("/hashes.json", new Response(content, responseInit))
+          local.put("hashes.json", new Response(content, responseInit))
         ]);
       }).catch(() => {
         if (LOG) console.log("Possible offline situation detected.");
