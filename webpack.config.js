@@ -58,6 +58,12 @@ module.exports = (env) => [{
 			use: [{
 				loader: "ts-loader"
 			}]
+		}, {
+			test: /\.vs$|\.fs$/,
+			exclude: /node_modules/,
+			use: [{
+				loader: "raw-loader"
+			}]
 		}]
 	},
 
