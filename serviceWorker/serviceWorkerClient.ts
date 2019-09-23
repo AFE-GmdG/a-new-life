@@ -145,7 +145,7 @@ export class ServiceWorkerClient<T> {
     let registration = await serviceWorker.getRegistration();
     if (!registration) {
       if (LOG) console.log("ServiceWorkerClient::create - Keine Registrierung gefunden, Neuregistrierung.");
-      [registration] = await Promise.all([serviceWorker.ready, serviceWorker.register(serviceWorkerFile, { scope: process.env.NODE_ENV === "development" ? "/" : "/a-new-life/" })]);
+      [registration] = await Promise.all([serviceWorker.ready, serviceWorker.register(serviceWorkerFile, { scope: "/" })]);
       if (LOG) console.log("ServiceWorkerClient::create - Neuregistrierung - " + (registration.active && registration.active.state));
     } else {
       if (LOG) console.log("ServiceWorkerClient::create - Registrierung gefunden, Starte diverse tests...");
@@ -153,7 +153,7 @@ export class ServiceWorkerClient<T> {
       if (registration.active && registration.active.scriptURL !== url.href) {
         if (LOG) console.log("ServiceWorkerClient::create - Test: unbekannter Serviceworker, Neuregistrierung");
         await registration.unregister();
-        [registration] = await Promise.all([serviceWorker.ready, serviceWorker.register(serviceWorkerFile, { scope: process.env.NODE_ENV === "development" ? "/" : "/a-new-life/" })]);
+        [registration] = await Promise.all([serviceWorker.ready, serviceWorker.register(serviceWorkerFile, { scope: "/" })]);
         if (LOG) console.log("ServiceWorkerClient::create - Neuregistrierung - " + (registration.active && registration.active.state));
       } else {
         if (LOG) console.log("ServiceWorkerClient::create - Test: Update");

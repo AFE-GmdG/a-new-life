@@ -1,3 +1,4 @@
+/dist
 /lib/worker
 /node_modules
 *.7z

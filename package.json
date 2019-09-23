@@ -4,8 +4,8 @@
   "description": "Working title for a browser based game.",
   "scripts": {
     "start": "webpack-dev-server --env debug",
-    "prebuild": "rimraf docs/*",
-    "build": "webpack --env docs",
+    "prebuild": "rimraf dist",
+    "build": "webpack --env dist",
     "prebuild:sw": "rimraf lib/worker/serviceworker.*",
     "build:sw": "webpack --env debug --config webpack.sw.config.js && webpack --env release --config webpack.sw.config.js"
   },

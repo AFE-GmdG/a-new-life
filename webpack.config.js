@@ -35,7 +35,7 @@ module.exports = (env) => [{
 		]
 	},
 
-	devtool: env === "docs" ? false : "source-map",
+	devtool: env === "dist" ? false : "source-map",
 
 	resolve: {
 		extensions: [".ts", ".js"],
@@ -46,7 +46,7 @@ module.exports = (env) => [{
 
 	output: {
 		filename: "[name].js",
-		path: path.resolve(cwd, env === "docs" ? "docs" : "dist"),
+		path: path.resolve(cwd, "dist"),
 		publicPath: "",
 		globalObject: "self"
 	},
@@ -63,9 +63,9 @@ module.exports = (env) => [{
 
 	optimization: {
 		noEmitOnErrors: true,
-		namedModules: env !== "docs",
-		namedChunks: env !== "docs",
-		minimize: env === "docs",
+		namedModules: env !== "dist",
+		namedChunks: env !== "dist",
+		minimize: env === "dist",
 		minimizer: minimizer,
 		runtimeChunk: "single",
 		splitChunks: {
@@ -95,15 +95,15 @@ module.exports = (env) => [{
 		),
 		new CopyWebpackPlugin([{
 			from: path.resolve(cwd, "src/assets/*.*"),
-			to: path.resolve(cwd, env === "docs" ? "docs" : "dist")
+			to: path.resolve(cwd, "dist")
 		}, {
-			from: env === "docs" ? "../lib/worker/sw.min.js" : "../lib/worker/sw.js",
+			from: env === "dist" ? "../lib/worker/sw.min.js" : "../lib/worker/sw.js",
 			to: "sw.js"
 		}, {
 			from: "offline.json",
 			to: "offline.json"
 		},
-		...(env !== "docs")
+		...(env !== "dist")
 			? [{
 				from: "../lib/worker/sw.js.map",
 				to: "sw.js.map"
@@ -112,7 +112,7 @@ module.exports = (env) => [{
 			logLevel: "error"
 		}),
 		new HtmlWebpackPlugin({
-			baseUrl: env === "docs" ? "https://a-friedel.github.io/a-new-life/" : "/",
+			baseUrl: "/",
 			filename: "index.html",
 			template: "index.html",
 			inject: "body",
@@ -122,7 +122,7 @@ module.exports = (env) => [{
 			}
 		}),
 		new HtmlWebpackPlugin({
-			baseUrl: env === "docs" ? "https://a-friedel.github.io/a-new-life/" : "/",
+			baseUrl: "/",
 			filename: "offline.html",
 			template: "offline.html",
 			inject: "body",
@@ -132,7 +132,7 @@ module.exports = (env) => [{
 				collapseWhitespace: true
 			}
 		}),
-		...(env === "docs") ? [
+		...(env === "dist") ? [
 			new webpack.DefinePlugin({
 				"process.env": {
 					NODE_ENV: "'production'",
@@ -148,7 +148,7 @@ module.exports = (env) => [{
 			})
 		],
 		new HashAssetsPlugin({
-			path: path.resolve(cwd, env === "docs" ? "docs" : "dist"),
+			path: path.resolve(cwd, "dist"),
 			prettyPrint: true
 		})
 	],

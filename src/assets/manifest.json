@@ -13,10 +13,10 @@
 			"sizes": "512x512"
 		}
 	],
-	"start_url": "/a-new-life/",
+	"start_url": "/",
 	"background_color": "#604020",
 	"display": "fullscreen",
 	"orientation": "landscape",
-	"scope": "/a-new-life/",
+	"scope": "/",
 	"theme_color": "#604020"
 }
