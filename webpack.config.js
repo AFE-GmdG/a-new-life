@@ -62,7 +62,16 @@ module.exports = (env) => [{
 			test: /\.vs$|\.fs$/,
 			exclude: /node_modules/,
 			use: [{
-				loader: "raw-loader"
+				loader: "../lib/string-loader"
+			}]
+		}, {
+			test: /\.png$/,
+			exclude: /node_modules/,
+			use: [{
+				loader: "file-loader",
+				options: {
+					name: "[path][hash:8].[ext]"
+				}
 			}]
 		}]
 	},
@@ -77,17 +86,17 @@ module.exports = (env) => [{
 		splitChunks: {
 			chunks: "all",
 			maxInitialRequests: Infinity,
-			minSize: 16384,
+			minSize: 0,
 			cacheGroups: {
 				named: {
-					test: /[\\/]node_modules[\\/]/,
-					name(/*module*/) {
-						// const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
-						// if (packageName.indexOf("typescript") !== -1) {
-						// 	return "typescript";
-						// } else {
-						// 	return "vendor";
-						// }
+					test: /[\\/]node_modules[\\/]|textures[\\/]|shader[\\/]/,
+					name(module) {
+						if (module.context.match(/src[\\/]textures/)) {
+							return "textures";
+						}
+						if (module.context.match(/src[\\/]shader/)) {
+							return "shader";
+						}
 						return "vendor";
 					}
 				}

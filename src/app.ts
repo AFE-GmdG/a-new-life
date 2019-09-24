@@ -1,7 +1,7 @@
 import { orThrow } from "./common";
 import { ApplicationService, IApplicationService } from "./services/applicationService";
 import { createProgram } from "./webGL/shader";
-import { resizeCanvasToDisplaySize } from "./webGL/utils";
+import { loadTextures, resizeCanvasToDisplaySize } from "./webGL/utils";
 
 const swPromise: Promise<IApplicationService> = window.navigator.serviceWorker
 	? ApplicationService.create("sw.js")
@@ -37,14 +37,17 @@ swPromise.then(applicationService => {
 		socket("/sockjs-node", onSocketMsg);
 	}
 
+
 	const appDiv = document.getElementById("app")!;
 	const canvas = document.createElement("canvas");
 	canvas.id = "main-canvas";
 	appDiv.appendChild(canvas);
 	resizeCanvasToDisplaySize(canvas);
 	const context = canvas.getContext("webgl2") || orThrow("Could not create WebGL-Context.");
+	loadTextures(context, "f", "g");
+
 	return createProgram(context, "simple");
-}).then(({context, vs, fs, program, positionAttributeLocation, positionBuffer}) => {
+}).then(({ context, vs, fs, program, positionAttributeLocation, positionBuffer }) => {
 	context.viewport(0, 0, context.canvas.width, context.canvas.height);
 	context.clearColor(0, 0, 0, 0);
 	context.clear(context.COLOR_BUFFER_BIT);
