@@ -123,7 +123,7 @@ module.exports = (env) => [{
 				from: "../lib/worker/sw.js.map",
 				to: "sw.js.map"
 			}]
-			:[]], {
+			: []], {
 			logLevel: "error"
 		}),
 		new HtmlWebpackPlugin({
@@ -160,6 +160,15 @@ module.exports = (env) => [{
 					NODE_ENV: "'development'",
 					VERSION: JSON.stringify(require("./package.json").version)
 				}
+			// }),
+			// new webpack.SourceMapDevToolPlugin({
+			// 	filename: "[name].js.map",
+			// 	columns: true,
+			// 	noSources: true,
+			// 	sourceRoot: "file:///" + cwd.replace(/\\/g, "/"),
+			// 	moduleFilenameTemplate: (module) => {
+			// 		return path.relative(cwd, module.absoluteResourcePath).replace(/\\/g, "/");
+			// 	}
 			})
 		],
 		new HashAssetsPlugin({

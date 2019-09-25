@@ -10,10 +10,12 @@
 		"runtimeArgs": [],
 		"breakOnLoad": false,
 		"breakOnLoadStrategy": "instrument",
-		"sourceMaps": true,
+		"sourceMaps": false,
+		"smartStep": true,
+		"showAsyncStacks": true,
 		"sourceMapPathOverrides": {
-			"webpack:///./*": "${workspaceFolder}/src/*",
-			"webpack:///*": "*"
+			"webpack:///./*": "${webRoot}/../src/*",
+			"webpack:///../*": "${webRoot}/*"
 		}
 	}]
 }

@@ -46,7 +46,7 @@ swPromise.then(applicationService => {
 	progress.classList.add("visible");
 
 	const onInitializationUpdate = (percent: number) => {
-		const value = `${percent}%`;
+		const value = `${percent.toFixed(0)}%`;
 		progress.textContent = value;
 		progress.style.backgroundSize = value;
 		if (percent >= 100) {
@@ -55,32 +55,6 @@ swPromise.then(applicationService => {
 	}
 
 	return createGame(canvas, applicationService, onInitializationUpdate);
-
-	// resizeCanvasToDisplaySize(canvas);
-	// const context = canvas.getContext("webgl2") || orThrow("Could not create WebGL-Context.");
-	// loadTextures(context, "f", "g");
-
-	// return createProgram(context, "simple");
-// }).then(({ context, vs, fs, program, positionAttributeLocation, positionBuffer }) => {
-	// context.viewport(0, 0, context.canvas.width, context.canvas.height);
-	// context.clearColor(0, 0, 0, 0);
-	// context.clear(context.COLOR_BUFFER_BIT);
-
-	// context.useProgram(program);
-	// context.enableVertexAttribArray(positionAttributeLocation);
-
-	// context.bindBuffer(context.ARRAY_BUFFER, positionBuffer);
-	// var size = 2;
-	// var type = context.FLOAT;
-	// var normalize = false;
-	// var stride = 0;
-	// var offset = 0;
-	// context.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
-
-	// var primitiveType = context.TRIANGLES;
-	// var offset = 0;
-	// var count = 3;
-	// context.drawArrays(primitiveType, offset, count);
 }).then(game => {
 	game.run();
 }).catch(reason => {
