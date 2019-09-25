@@ -39,6 +39,7 @@
 		"typescript.referencesCodeLens.enabled": true,
 		"typescript.suggest.paths": true,
 		"typescript.tsc.autoDetect": "off",
+		"typescript.tsdk": "node_modules\\typescript\\lib",
 
 		"javascript.validate.enable": true,
 		"javascript.format.enable": true,
