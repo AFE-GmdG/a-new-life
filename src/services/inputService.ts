@@ -68,9 +68,31 @@ class InputService implements IInputService {
 
 	/* private methods */
 	private addKeyboardMapping(code: string, reportOnlyOnRelease: boolean = false, callback?: (isPressed: boolean) => void) {
+		this.keyInfoMap.set(code, Object.create(null, {
+			isPressed: { enumerable: true, configurable: false, writable: true, value: false },
+			reportOnlyOnRelease: { enumerable: true, configurable: false, writable: false, value: reportOnlyOnRelease },
+			oldKeyInfo: { enumerable: true, configurable: false, writable: false, value: this.keyInfoMap.get(code) },
+
+			onPressed: { enumerable: true, configurable: false, writable: false, value: callback },
+			removeMapping: {
+				enumerable: true,
+				configurable: false,
+				writable: false,
+				value: (code: string) => {
+					const keyInfo = this.keyInfoMap.get(code) || orThrow();
+					if (keyInfo.oldKeyInfo) {
+						this.keyInfoMap.set(code, keyInfo.oldKeyInfo);
+					} else {
+						this.keyInfoMap.delete(code);
+					}
+				}
+			}
+		}));
 	}
 
 	private removeKeyboardMapping(code: string) {
+		const keyInfo = this.keyInfoMap.get(code);
+		keyInfo && keyInfo.removeMapping(code);
 	}
 
 	private isKeyboardPressed(code: string) {

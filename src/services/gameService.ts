@@ -115,7 +115,13 @@ export function createGameService(applicationService: IApplicationService, graph
 			while (accumulatedTime >= deltaTime) {
 				if (!updateLogic(localLastTime - totalTimeDifference, deltaTime)) {
 					// if updateLogic returnd false, end the gameloop / end the game.
+					const { gl } = graphicService;
 					autoRequestNextFrame = false;
+
+					gl.clearColor(0.0, 0.0, 0.0, 1.0);
+					gl.clearDepth(1.0);
+					gl.clearStencil(0.0);
+					gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 					cleanup();
 					return;
 				}

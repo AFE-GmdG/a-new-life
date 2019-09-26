@@ -6,8 +6,3 @@ export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement, multiplier:
 		canvas.height = height;
 	}
 }
-
-export async function loadTextures(context: WebGL2RenderingContext, ...names: string[]) {
-	const urls = await Promise.all(names.map(name => import("../textures/" + name + ".png"))).then(urls => urls.map(url => url.default as string));
-	console.log(urls);
-}

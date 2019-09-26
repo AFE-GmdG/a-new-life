@@ -3,6 +3,8 @@ import { IGameService, View } from "../services/gameService";
 export function createMainMenu(gameService: IGameService) {
 	const { graphicService, inputService } = gameService;
 
+	inputService.keyboardState.addMapping("Escape");
+
 	const mainMenu: View = Object.create(null, {
 		onUpdateLogic: { enumerable: true, configurable: false, writable: false, value: onUpdateLogic },
 		onUpdateGraphic: { enumerable: true, configurable: false, writable: false, value: onUpdateGraphic },
@@ -17,6 +19,11 @@ export function createMainMenu(gameService: IGameService) {
 		if (!isFrontView) {
 			return true;
 		}
+
+		if (inputService.keyboardState.isPressed("Escape")) {
+			return false;
+		}
+
 
 		return true;
 	}

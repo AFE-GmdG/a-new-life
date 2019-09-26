@@ -78,7 +78,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 			canvas.addEventListener("webglcontextlost", onContextLost);
 			canvas.addEventListener("webglcontextrestored", onContextRestored);
 
-			gl.clearColor(0.7, 0, 0.7, 1.0);
+			gl.clearColor(0.7, 0.0, 0.7, 1.0);
 			gl.clearDepth(1.0);
 			gl.clearStencil(0.0);
 			gl.enable(gl.DEPTH_TEST);
