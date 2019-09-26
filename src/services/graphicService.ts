@@ -49,8 +49,8 @@ type TextureInfo = {
 };
 //#endregion
 
-//#region Graphic Services
-export function createGraphicServices(canvas: HTMLCanvasElement, skyboxNames: string[], textureNames: string[], shaderNames: string[], meshNames: string[], initializationUpdateCallback: (percent: number) => void) {
+//#region Graphic Service
+export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: string[], textureNames: string[], shaderNames: string[], meshNames: string[], initializationUpdateCallback: (percent: number) => void) {
 	const sum = 1 + skyboxNames.length + textureNames.length + shaderNames.length + meshNames.length;
 	let loaded = 0;
 	let currentProgramName: string;

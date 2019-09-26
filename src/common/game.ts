@@ -1,9 +1,11 @@
-import { orThrow } from ".";
-
 import { IApplicationService } from "../services/applicationService";
-import { IGameService } from "../services/gameService";
-import { createGraphicServices } from "../services/graphicService";
+import { createGraphicService } from "../services/graphicService";
 import { createInputService } from "../services/inputService";
+import { createAudioService } from "../services/audioService";
+import { createNetworkService } from "../services/networkService";
+import { createGameService } from "../services/gameService";
+
+import { createMainMenu } from "../views/mainMenu";
 
 import { resizeCanvasToDisplaySize } from "../webGL/utils";
 
@@ -21,8 +23,12 @@ export function createGame(canvas: HTMLCanvasElement, applicationService: IAppli
 		try {
 			initializationUpdateCallback(0);
 			resizeCanvasToDisplaySize(canvas);
-			const graphicService = await createGraphicServices(canvas, [], ["app", "f", "g"], ["simple"], [], createUpdateCallback(1, 90));
+			const graphicService = await createGraphicService(canvas, [], ["app", "f", "g"], ["simple"], [], createUpdateCallback(1, 90));
 			const inputService = createInputService(canvas);
+			const audioService = await createAudioService();
+			const networkService = await createNetworkService();
+
+			const gameService = createGameService(applicationService, graphicService, inputService, audioService, networkService, createMainMenu);
 
 			// The input service needs a redesign.
 			// Input Mappigs must be stackable, only views in front should get input events.
@@ -31,10 +37,44 @@ export function createGame(canvas: HTMLCanvasElement, applicationService: IAppli
 			//   If a level is active the Main Menu becomes a background view and therefore the inputs should
 			//   ignored until the view becomes active again. An Ingame Menu is stacked on top of the Level,
 			//   therefore the Level becomes a background view until die Ingame Menu is closed.)
-			inputService.keyboardState.addMapping("ArrowUp", true, isPressed => { console.log("ArrowUp was pressed.") });
+			// inputService.keyboardState.addMapping("ArrowUp", true, isPressed => { console.log("ArrowUp was pressed.") });
+
+			let paused = false;
+
+			const game: IGame = Object.create(null, {
+				running: { enumerable: true, configurable: false, get: () => gameService.gameLoop.running },
+				paused: { enumerable: true, configurable: false, get: () => paused },
+
+				resize: {
+					enumerable: true,
+					configurable: false,
+					writable: false,
+					value: () => {
+						resizeCanvasToDisplaySize(canvas);
+					}
+				},
+				run: {
+					enumerable: true,
+					configurable: false,
+					writable: false,
+					value: () => {
+						paused = false;
+						gameService.gameLoop.start();
+					}
+				},
+				pause: {
+					enumerable: true,
+					configurable: false,
+					writable: false,
+					value: () => {
+						paused = gameService.topView && gameService.topView.requestPause() || false;
+					}
+				}
+			});
 
 			initializationUpdateCallback(100);
 
+			resolve(game);
 		} catch (error) {
 			reject(error);
 		}
