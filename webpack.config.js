@@ -65,7 +65,7 @@ module.exports = (env) => [{
 				loader: "../lib/string-loader"
 			}]
 		}, {
-			test: /\.png$/,
+			test: /\.png$|\.jpg$/,
 			exclude: /node_modules/,
 			use: [{
 				loader: "file-loader",

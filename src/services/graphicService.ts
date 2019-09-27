@@ -2,8 +2,8 @@ import { orThrow } from "../common";
 
 export interface IGraphicService {
 	readonly gl: WebGL2RenderingContext;
+	readonly skyboxCache: SkyboxCache;
 	readonly textureCache: TextureCache;
-//	readonly skyboxCache: SkyBoxCache;
 	readonly shaderCache: ShaderCache;
 
 	cleanup(): void;
@@ -47,6 +47,17 @@ type TextureInfo = {
 	readonly height: number;
 	readonly unload: () => void;
 };
+
+type SkyboxCache = {
+	readonly get: (skyboxName: string) => WebGLTexture;
+	readonly cleanup: () => void;
+};
+
+type SkyboxInfo = {
+	readonly texture: WebGLTexture;
+	readonly size: number;
+	readonly unload: () => void;
+};
 //#endregion
 
 //#region Graphic Service
@@ -58,6 +69,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 	let currentBufferName: string | undefined = undefined;
 	let currentBuffer: WebGLBuffer | undefined = undefined;
 
+	const skyboxInfoMap = new Map<string, SkyboxInfo>();
 	const textureInfoMap = new Map<string, TextureInfo>();
 	const shaderInfoMap = new Map<string, ShaderInfo>();
 
@@ -73,7 +85,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 
 	return new Promise<IGraphicService>(async (resolve, reject) => {
 		try {
-			const gl = updateInitializationUpdateCallback((canvas.getContext("webgl2", contextAttributes) as WebGL2RenderingContext) || orThrow());
+			const gl = updateInitializationUpdateCallback((canvas.getContext("webgl", contextAttributes) as WebGL2RenderingContext) || orThrow());
 
 			canvas.addEventListener("webglcontextlost", onContextLost);
 			canvas.addEventListener("webglcontextrestored", onContextRestored);
@@ -84,8 +96,14 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 			gl.enable(gl.DEPTH_TEST);
 			gl.depthFunc(gl.LEQUAL);
 
+			await initSkyboxCache(gl, skyboxNames);
 			await initTextureCache(gl, textureNames);
 			await initShaderCache(gl, shaderNames);
+
+			const skyboxCache: SkyboxCache = Object.create(null, {
+				get: { enumerable: true, configurable: false, writable: false, value: getSkybox },
+				cleanup: { enumerable: true, configurable: false, writable: false, value: cleanupSkyboxCache }
+			});
 
 			const textureCache: TextureCache = Object.create(null, {
 				get: { enumerable: true, configurable: false, writable: false, value: getTexture },
@@ -107,6 +125,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 
 			const graphicService: IGraphicService = Object.create(null, {
 				gl: { enumerable: true, configurable: false, writable: false, value: gl },
+				skyboxCache: { enumerable: true, configurable: false, writable: false, value: skyboxCache },
 				textureCache: { enumerable: true, configurable: false, writable: false, value: textureCache },
 				shaderCache: { enumerable: true, configurable: false, writable: false, value: shaderCache },
 
@@ -118,9 +137,90 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 		}
 	});
 
+	//#region Skybox Cache
+	function initSkyboxCache(gl: WebGL2RenderingContext, skyboxNames: string[]) {
+		return Promise.all(skyboxNames.map(skyboxName => import(`../textures/${skyboxName}`).then(url => ({
+			name: skyboxName,
+			url: url.default as string
+		})))).then(urls => Promise.all(urls.map(url => new Promise<string>((resolve, reject) => {
+			const image = new Image();
+			image.onerror = reason => {
+				reject(reason);
+			};
+			image.onload = _ => {
+				try {
+					isPow2(image.height) || orThrow("Invalid skybox texture.");
+					const size = image.height >> 1;
+					(size * 3 === image.width) || orThrow("Invalid skybox texture.");
+					const canvas = document.createElement("canvas");
+					const ctx = canvas.getContext("2d", { alpha: true }) || orThrow("Could not create canvas.");
+					canvas.width = size;
+					canvas.height = size;
+
+					let texture: WebGLTexture | undefined = undefined;
+
+					const skyboxInfo: SkyboxInfo = Object.create(null, {
+						texture: {
+							enumerable: true,
+							configurable: false,
+							get: () => {
+								if (!texture) {
+									texture = gl.createTexture() || orThrow(`Could not create skybox texture: ${url.name}`);
+									gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+									gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+									gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.BROWSER_DEFAULT_WEBGL);
+									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
+									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
+									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
+									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
+									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
+									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
+								}
+								return texture;
+							}
+						},
+						unload: {
+							enumerable: true,
+							configurable: false,
+							writable: false,
+							value: () => {
+								if (texture) {
+									gl.deleteTexture(texture);
+									texture = undefined;
+								}
+							}
+						},
+						size: { enumerable: true, configurable: false, writable: false, value: size }
+					});
+					skyboxInfoMap.set(url.name, skyboxInfo);
+					resolve(updateInitializationUpdateCallback(url.name));
+				} catch (reason) {
+					reject(reason);
+				}
+			};
+			image.src = url.url;
+		}))));
+	}
+
+	function getSkybox(skyboxName: string) {
+		const skyboxInfo = skyboxInfoMap.get(skyboxName) || orThrow(`Skybox not found: ${skyboxName}`);
+		return skyboxInfo.texture;
+	}
+
+	function cleanupSkyboxCache() {
+		skyboxInfoMap.forEach(skyboxInfo => skyboxInfo.unload());
+	}
+	//#endregion
+
 	//#region Texture Cache
 	function initTextureCache(gl: WebGL2RenderingContext, textureNames: string[]) {
-		return Promise.all(textureNames.map(textureName => import(`../textures/${textureName}.png`).then(url => ({
+		return Promise.all(textureNames.map(textureName => import(`../textures/${textureName}`).then(url => ({
 			name: textureName,
 			url: url.default as string
 		})))).then(urls => Promise.all(urls.map(url => new Promise<string>((resolve, reject) => {
@@ -282,7 +382,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 
 	function updateBuffer(gl: WebGL2RenderingContext, bufferName: string, target: number, type: number, usage: number, data: ArrayBuffer | ArrayBufferView, size: 1 | 2 | 3 | 4, normalized: boolean, stride: number, offset: number) {
 		const shaderInfo = shaderInfoMap.get(currentProgramName) || orThrow(`ShaderProgram not found: ${currentProgramName}`);
-		let bufferInfo = shaderInfo.bufferMap.get(bufferName) || orThrow(`Buffer not found: ${bufferName}`);
+		let bufferInfo = shaderInfo.bufferMap.get(bufferName);
 		if (!bufferInfo) {
 			target === gl.ARRAY_BUFFER
 				|| target === gl.ELEMENT_ARRAY_BUFFER
@@ -299,7 +399,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 				buffer: { enumerable: true, configurable: false, writable: false, value: gl.createBuffer() || orThrow(`Could not create buffer. (${currentProgramName} - ${bufferName})`) },
 				location: { enumerable: true, configurable: false, writable: false, value: location },
 				target: { enumerable: true, configurable: false, writable: false, value: target }
-			});
+			}) as BufferInfo;
 			shaderInfo.bufferMap.set(bufferName, bufferInfo);
 		}
 		type === gl.BYTE
@@ -349,6 +449,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 	}
 
 	function cleanup(gl: WebGL2RenderingContext) {
+		cleanupSkyboxCache();
 		cleanupTextureCache();
 		cleanupShaderCache(gl);
 	}

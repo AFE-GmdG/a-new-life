@@ -23,10 +23,20 @@ export function createGame(canvas: HTMLCanvasElement, applicationService: IAppli
 		try {
 			initializationUpdateCallback(0);
 			resizeCanvasToDisplaySize(canvas);
-			const graphicService = await createGraphicService(canvas, [], ["app", "f", "g"], ["simple"], [], createUpdateCallback(1, 90));
+			const graphicService = await createGraphicService(canvas, ["Skybox-Grass-512.jpg"], ["app.png", "f.png", "g.png"], ["simple", "floor"], [], createUpdateCallback(1, 90));
 			const inputService = createInputService(canvas);
 			const audioService = await createAudioService();
 			const networkService = await createNetworkService();
+
+			const { gl } = graphicService;
+			const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+
+			if (debugInfo) {
+				console.log({
+					vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+					renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+				});
+			}
 
 			const gameService = createGameService(applicationService, graphicService, inputService, audioService, networkService, createMainMenu);
 
