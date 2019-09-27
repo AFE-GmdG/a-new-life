@@ -3,6 +3,14 @@ import { IGameService, View } from "../services/gameService";
 export function createMainMenu(gameService: IGameService) {
 	const { graphicService, inputService } = gameService;
 
+	const floor = new Float32Array([
+		// x, y, z, tu, tv, nx, ny, nz
+		5.0, -7.0, 0.0, 7.0, 0.0, 0.0, 0.0, 1.0,
+		5.0, 7.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+		-5.0, 7.0, 0.0, 0.0, 5.0, 0.0, 0.0, 1.0,
+		-5.0, -7.0, 0.0, 7.0, 5.0, 0.0, 0.0, 1.0
+	]);
+
 	inputService.keyboardState.addMapping("Escape");
 
 	const mainMenu: View = Object.create(null, {

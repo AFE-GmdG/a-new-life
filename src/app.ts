@@ -1,5 +1,12 @@
-import { createGame, orThrow } from "./common";
+import { createGame } from "./common";
 import { ApplicationService, IApplicationService } from "./services/applicationService";
+
+import { Float2 } from "./webGL/float2";
+import { Float3 } from "./webGL/float3";
+import { Float4 } from "./webGL/float4";
+import { Matrix2x2 } from "./webGL/matrix2x2";
+import { Matrix3x3 } from "./webGL/matrix3x3";
+import { Matrix4x4 } from "./webGL/matrix4x4";
 
 const swPromise: Promise<IApplicationService> = window.navigator.serviceWorker
 	? ApplicationService.create("sw.js")
