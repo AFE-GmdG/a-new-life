@@ -85,7 +85,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 
 	return new Promise<IGraphicService>(async (resolve, reject) => {
 		try {
-			const gl = updateInitializationUpdateCallback((canvas.getContext("webgl", contextAttributes) as WebGL2RenderingContext) || orThrow());
+			const gl = updateInitializationUpdateCallback((canvas.getContext("webgl2", contextAttributes) as WebGL2RenderingContext) || orThrow());
 
 			canvas.addEventListener("webglcontextlost", onContextLost);
 			canvas.addEventListener("webglcontextrestored", onContextRestored);

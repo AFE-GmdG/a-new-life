@@ -1,26 +1,34 @@
 import { orThrow } from "../common";
 import { IGameService, View } from "../services/gameService";
 import { Float3 } from "../webGL/float3";
+import { Matrix4x4 } from "../webGL/matrix4x4";
 
 export function createMainMenu(gameService: IGameService) {
 	const { graphicService, inputService } = gameService;
 	const { gl, shaderCache } = graphicService
 
-	const reverseLightDirectionArray = new Float32Array([0, 0, 1]);
-	let eye: Float3;
-	let at: Float3;
-	let up: Float3;
-
-	const floor = new Float32Array([
-		// x, y, z, tu, tv, nx, ny, nz
-		5.0, -7.0, 0.0, 7.0, 0.0, 0.0, 0.0, 1.0,
-		5.0, 7.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-		-5.0, 7.0, 0.0, 0.0, 5.0, 0.0, 0.0, 1.0,
-		-5.0, -7.0, 0.0, 7.0, 5.0, 0.0, 0.0, 1.0
+	const tetraeder = new Float32Array([
+		0.0, -0.25, -0.5,
+		0.0, 0.25, 0.0,
+		0.5, -0.25, 0.25,
+		-0.5, -0.25, 0.25
 	]);
-	const floorProgram = shaderCache.useProgram("floor");
-	shaderCache.updateBuffer("a_vertexTeil1", gl.ARRAY_BUFFER, gl.FLOAT, gl.STATIC_DRAW, floor, 4, false, 32, 0);
-	shaderCache.updateBuffer("a_vertexTeil2", gl.ARRAY_BUFFER, gl.FLOAT, gl.STATIC_DRAW, floor, 4, false, 32, 16);
+	const indices = new Uint8Array([
+		2, 1, 3,
+		3, 1, 0,
+		0, 1, 2,
+		0, 2, 3
+	]);
+	/*const flatProgram = */shaderCache.useProgram("flat");
+	shaderCache.updateBuffer("a_Vertex", gl.ARRAY_BUFFER, gl.FLOAT, gl.STATIC_DRAW, tetraeder, 3, false, 12, 0);
+	const indexBuffer = gl.createBuffer() || orThrow();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+	const world = Matrix4x4.identity;
+	const projection = Matrix4x4.createOrthographic(-2, 2, -2, 2, -1, 1);
+	let rotateY: Matrix4x4;
+	let transform: Matrix4x4;
 
 	inputService.keyboardState.addMapping("Escape");
 
@@ -39,13 +47,13 @@ export function createMainMenu(gameService: IGameService) {
 			return true;
 		}
 
+		rotateY = Matrix4x4.createRotationMatrix(new Float3(0.5, -0.4, 0.7).normalized, totalTime * 0.001);
+		transform = Matrix4x4.mul(world, projection);
+		transform = Matrix4x4.mul(transform, rotateY);
+
 		if (inputService.keyboardState.isPressed("Escape")) {
 			return false;
 		}
-
-		eye = new Float3(-4.95, 1.00 + Math.sin(totalTime / 3000), 1.75);
-		at = new Float3(5.00, 1.91, 0.46);
-		up = new Float3(0.00, 0.00, 1.00);
 
 		return true;
 	}
@@ -55,38 +63,24 @@ export function createMainMenu(gameService: IGameService) {
 			return;
 		}
 
-		const { gl, shaderCache, textureCache, skyboxCache } = graphicService;
+		const { gl, shaderCache } = graphicService;
 
-		shaderCache.useProgram("floor");
-		shaderCache.useBuffer("a_vertexTeil1", gl.FLOAT, gl.STATIC_DRAW, 4, false, 32, 0);
-		shaderCache.useBuffer("a_vertexTeil2", gl.FLOAT, gl.STATIC_DRAW, 4, false, 32, 16);
+		const flatProgram = shaderCache.useProgram("flat");
+		shaderCache.useBuffer("a_Vertex", gl.FLOAT, gl.STATIC_DRAW, 3, false, 12, 0);
 
-		const data1Location = gl.getUniformLocation(floorProgram, "u_data1") || orThrow();
-		gl.uniformMatrix4fv(data1Location, false, [60, 1000, at.x, up.y, 846, eye.x, at.y, up.z, 412, eye.y, at.z, 0.0, 0.1, eye.z, up.x, 0.0]);
-		const data2Location = gl.getUniformLocation(floorProgram, "u_data2") || orThrow();
-		gl.uniform4f(data2Location, 0.0, 0.0, 0.0, 0.0);
+		const data1Location = gl.getUniformLocation(flatProgram, "u_Transform") || orThrow();
+		gl.uniformMatrix4fv(data1Location, false, transform.elements);
+		const data2Location = gl.getUniformLocation(flatProgram, "u_Color") || orThrow();
+		gl.uniform4fv(data2Location, [1, 0, 0, 1]);
 
-		const reverseLightDirectionLocation = gl.getUniformLocation(floorProgram, "u_reverseLightDirection") || orThrow();
-		gl.uniform3fv(reverseLightDirectionLocation, reverseLightDirectionArray);
-		const colorTextureUniformLocation = gl.getUniformLocation(floorProgram, "u_color") || orThrow();
-		gl.uniform1i(colorTextureUniformLocation, 0);
-		const cubeMapUniformLocation = gl.getUniformLocation(floorProgram, "u_cube") || orThrow();
-		gl.uniform1i(cubeMapUniformLocation, 1);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+		gl.drawElements(gl.TRIANGLES, 12, gl.UNSIGNED_BYTE, 0);
 
-		gl.activeTexture(gl.TEXTURE0);
-		const textureName = "app.png";
-		gl.bindTexture(gl.TEXTURE_2D, textureCache.get(textureName));
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, textureCache.isPow2(textureName) ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-		gl.activeTexture(gl.TEXTURE1);
-		gl.bindTexture(gl.TEXTURE_CUBE_MAP, skyboxCache.get("Skybox-Grass-512.jpg"));
-		gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-		gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-		gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+		gl.uniform4fv(data2Location, [0, 0, 0, 1]);
+		gl.drawElements(gl.LINE_LOOP, 3, gl.UNSIGNED_BYTE, 0);
+		gl.drawElements(gl.LINE_LOOP, 3, gl.UNSIGNED_BYTE, 3);
+		gl.drawElements(gl.LINE_LOOP, 3, gl.UNSIGNED_BYTE, 6);
+		gl.drawElements(gl.LINE_LOOP, 3, gl.UNSIGNED_BYTE, 9);
 	}
 
 	function onResize(newWidth: number, newHeight: number) {

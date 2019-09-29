@@ -38,6 +38,13 @@ export class Matrix4x4 {
 			- this._m03 * this.getSubmatrix(0, 3).determinant);
 	}
 
+	get elements() {
+		return [this._m00, this._m10, this._m20, this._m30,
+			this._m01, this._m11, this._m21, this._m31,
+			this._m02, this._m12, this._m22, this._m32,
+			this._m03, this._m13, this._m23, this._m33]
+	}
+
 	get inverse() {
 		// https://www.youtube.com/watch?v=T8vHPIJqO3Q
 		// 00 01 02 03
@@ -380,6 +387,38 @@ export class Matrix4x4 {
 			new Float4(0, yScale, 0, 0),
 			new Float4(0, 0, far / (far - near), -near * far / (far - near)),
 			new Float4(0, 0, 1, 0));
+	}
+
+	static createOrthographic(left: number, right: number, bottom: number, top: number, near: number, far: number) {
+		if (!Number.isFinite(left)
+			|| !Number.isFinite(right)
+			|| !Number.isFinite(top)
+			|| !Number.isFinite(bottom)
+			|| !Number.isFinite(near)
+			|| !Number.isFinite(far)
+			|| Math.abs(left - right) < PRECISION
+			|| Math.abs(bottom - top) < PRECISION
+			|| Math.abs(near - far) < PRECISION) {
+			throw new Error('Invalid Parameter Values.');
+		}
+
+		const widthRatio = 1.0 / (right - left);
+		const heightRatio = 1.0 / (top - bottom);
+		const depthRatio = 1.0 / (far - near);
+
+		const sx = 2 * widthRatio;
+		const sy = 2 * heightRatio;
+		const sz = -2 * depthRatio;
+
+		const tx = -(right + left) * widthRatio;
+		const ty = -(top + bottom) * heightRatio;
+		const tz = -(far + near) * depthRatio;
+
+		return new Matrix4x4(
+			new Float4(sx, 0, 0, 0),
+			new Float4(0, sx, 0, 0),
+			new Float4(0, 0, sz, 0),
+			new Float4(tx, ty, tz, 1));
 	}
 
 	static createRotationMatrix(axis: Float3, angle: number) {
