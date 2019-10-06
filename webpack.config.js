@@ -73,6 +73,12 @@ module.exports = (env) => [{
 					name: "[path][hash:8].[ext]"
 				}
 			}]
+		}, {
+			test: /\.jsonc$/,
+			exclude: /node_modules/,
+			use: [{
+				loader: "../lib/string-loader"
+			}]
 		}]
 	},
 
@@ -89,13 +95,16 @@ module.exports = (env) => [{
 			minSize: 0,
 			cacheGroups: {
 				named: {
-					test: /[\\/]node_modules[\\/]|textures[\\/]|shader[\\/]/,
+					test: /[\\/]node_modules[\\/]|meshes[\\/]|shader[\\/]|textures[\\/]/,
 					name(module) {
-						if (module.context.match(/src[\\/]textures/)) {
-							return "textures";
+						if (module.context.match(/src[\\/]meshes/)) {
+							return "meshes";
 						}
 						if (module.context.match(/src[\\/]shader/)) {
 							return "shader";
+						}
+						if (module.context.match(/src[\\/]textures/)) {
+							return "textures";
 						}
 						return "vendor";
 					}

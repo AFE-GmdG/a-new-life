@@ -1,38 +1,27 @@
-import { orThrow } from "../common";
+import { parse } from "jsonc-parser";
+
+import { Mesh, orThrow } from "../common";
 
 export interface IGraphicService {
 	readonly gl: WebGL2RenderingContext;
 	readonly skyboxCache: SkyboxCache;
 	readonly textureCache: TextureCache;
 	readonly shaderCache: ShaderCache;
+	readonly meshCache: MeshCache;
 
 	cleanup(): void;
 }
 
-//#region Typen
-type ShaderCache = {
-	readonly currentProgramName: string;
-	readonly currentProgram: WebGLProgram;
-	readonly currentBufferName: string | undefined;
-	readonly currentBuffer: WebGLBuffer | undefined;
-
-	readonly useProgram: (programName: string) => WebGLProgram;
-	readonly useBuffer: (bufferName: string, type: number, usage: number, size: 1 | 2 | 3 | 4, normalized?: boolean, stride?: number, offset?: number, forceUse?: boolean) => number;
-	readonly updateBuffer: (bufferName: string, target: number, type: number, usage: number, data: ArrayBuffer | ArrayBufferView, size: 1 | 2 | 3 | 4, normalized?: boolean, stride?: number, offset?: number) => number;
+//#region Types
+type SkyboxCache = {
+	readonly get: (skyboxName: string) => WebGLTexture;
 	readonly cleanup: () => void;
 };
 
-type ShaderInfo = {
-	readonly vertexShader: WebGLShader;
-	readonly fragmentShader: WebGLShader;
-	readonly program: WebGLProgram;
-	readonly bufferMap: Map<string, BufferInfo>;
-};
-
-type BufferInfo = {
-	readonly buffer: WebGLBuffer;
-	readonly location: number;
-	readonly target: number;
+type SkyboxInfo = {
+	readonly texture: WebGLTexture;
+	readonly size: number;
+	readonly unload: () => void;
 };
 
 type TextureCache = {
@@ -48,30 +37,56 @@ type TextureInfo = {
 	readonly unload: () => void;
 };
 
-type SkyboxCache = {
-	readonly get: (skyboxName: string) => WebGLTexture;
+type ShaderCache = {
+	readonly currentProgramName: string;
+	readonly currentProgram: WebGLProgram;
+	readonly currentBufferName: string | undefined;
+	readonly currentBuffer: WebGLBuffer | undefined;
+
+	readonly useProgram: (programName: string) => WebGLProgram;
+	// readonly useBuffer: (bufferName: string, type: number, usage: number, size: 1 | 2 | 3 | 4, normalized?: boolean, stride?: number, offset?: number, forceUse?: boolean) => number;
+	// readonly updateBuffer: (bufferName: string, target: number, type: number, usage: number, data: ArrayBuffer | ArrayBufferView, size: 1 | 2 | 3 | 4, normalized?: boolean, stride?: number, offset?: number) => number;
 	readonly cleanup: () => void;
 };
 
-type SkyboxInfo = {
-	readonly texture: WebGLTexture;
-	readonly size: number;
+type ShaderInfo = {
+	readonly vertexShader: WebGLShader;
+	readonly fragmentShader: WebGLShader;
+	readonly program: WebGLProgram;
+	// readonly bufferMap: Map<string, BufferInfo>;
+};
+
+type MeshCache = {
+	readonly get: (meshName: string) => Mesh;
+	readonly cleanup: () => void;
+};
+
+type MeshInfo = {
+	readonly mesh: Mesh;
 	readonly unload: () => void;
+};
+
+type BufferInfo = {
+	readonly buffer: WebGLBuffer;
+	readonly location: number;
+	readonly target: number;
 };
 //#endregion
 
 //#region Graphic Service
 export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: string[], textureNames: string[], shaderNames: string[], meshNames: string[], initializationUpdateCallback: (percent: number) => void) {
+	//#region createGraphicService
 	const sum = 1 + skyboxNames.length + textureNames.length + shaderNames.length + meshNames.length;
 	let loaded = 0;
 	let currentProgramName: string;
 	let currentProgram: WebGLProgram;
-	let currentBufferName: string | undefined = undefined;
-	let currentBuffer: WebGLBuffer | undefined = undefined;
+	// let currentBufferName: string | undefined = undefined;
+	// let currentBuffer: WebGLBuffer | undefined = undefined;
 
 	const skyboxInfoMap = new Map<string, SkyboxInfo>();
 	const textureInfoMap = new Map<string, TextureInfo>();
 	const shaderInfoMap = new Map<string, ShaderInfo>();
+	const meshInfoMap = new Map<string, MeshInfo>();
 
 	const contextAttributes: WebGLContextAttributes = {
 		alpha: true,
@@ -85,7 +100,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 
 	return new Promise<IGraphicService>(async (resolve, reject) => {
 		try {
-			const gl = updateInitializationUpdateCallback((canvas.getContext("webgl2", contextAttributes) as WebGL2RenderingContext) || orThrow());
+			const gl = updateInitializationUpdateCallback((canvas.getContext("webgl2", contextAttributes) as WebGL2RenderingContext) || orThrow(`Could not get WebGL2 context.`));
 
 			canvas.addEventListener("webglcontextlost", onContextLost);
 			canvas.addEventListener("webglcontextrestored", onContextRestored);
@@ -99,6 +114,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 			await initSkyboxCache(gl, skyboxNames);
 			await initTextureCache(gl, textureNames);
 			await initShaderCache(gl, shaderNames);
+			await initMeshCache(gl, meshNames);
 
 			const skyboxCache: SkyboxCache = Object.create(null, {
 				get: { enumerable: true, configurable: false, writable: false, value: getSkybox },
@@ -114,13 +130,18 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 			const shaderCache: ShaderCache = Object.create(null, {
 				currentProgramName: { enumerable: true, configurable: false, get: () => currentProgramName },
 				currentProgram: { enumerable: true, configurable: false, get: () => currentProgram },
-				currentBufferName: { enumerable: true, configurable: false, get: () => currentBufferName },
-				currentBuffer: { enumerable: true, configurable: false, get: () => currentBuffer },
+				// currentBufferName: { enumerable: true, configurable: false, get: () => currentBufferName },
+				// currentBuffer: { enumerable: true, configurable: false, get: () => currentBuffer },
 
 				useProgram: { enumerable: true, configurable: false, writable: false, value: (programName: string) => useProgram(gl, programName) },
-				useBuffer: { enumerable: true, configurable: false, writable: false, value: (bufferName: string, type: number, usage: number, size: 1 | 2 | 3 | 4, normalized: boolean = false, stride: number = 0, offset: number = 0, forceUse: boolean = false) => useBuffer(gl, bufferName, type, usage, size, normalized, stride, offset, forceUse) },
-				updateBuffer: { enumerable: true, configurable: false, writable: false, value: (bufferName: string, target: number, type: number, usage: number, data: ArrayBuffer | ArrayBufferView, size: 1 | 2 | 3 | 4, normalized: boolean = false, stride: number = 0, offset: number = 0) => updateBuffer(gl, bufferName, target, type, usage, data, size, normalized, stride, offset) },
+				// useBuffer: { enumerable: true, configurable: false, writable: false, value: (bufferName: string, type: number, usage: number, size: 1 | 2 | 3 | 4, normalized: boolean = false, stride: number = 0, offset: number = 0, forceUse: boolean = false) => useBuffer(gl, bufferName, type, usage, size, normalized, stride, offset, forceUse) },
+				// updateBuffer: { enumerable: true, configurable: false, writable: false, value: (bufferName: string, target: number, type: number, usage: number, data: ArrayBuffer | ArrayBufferView, size: 1 | 2 | 3 | 4, normalized: boolean = false, stride: number = 0, offset: number = 0) => updateBuffer(gl, bufferName, target, type, usage, data, size, normalized, stride, offset) },
 				cleanup: { enumerable: true, configurable: false, writable: false, value: () => cleanupShaderCache(gl) }
+			});
+
+			const meshCache: MeshCache = Object.create(null, {
+				get: { enumerable: true, configurable: false, writable: false, value: getMesh },
+				cleanup: { enumerable: true, configurable: false, writable: false, value: cleanupMeshCache }
 			});
 
 			const graphicService: IGraphicService = Object.create(null, {
@@ -128,6 +149,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 				skyboxCache: { enumerable: true, configurable: false, writable: false, value: skyboxCache },
 				textureCache: { enumerable: true, configurable: false, writable: false, value: textureCache },
 				shaderCache: { enumerable: true, configurable: false, writable: false, value: shaderCache },
+				meshCache: { enumerable: true, configurable: false, writable: false, value: meshCache },
 
 				cleanup: { enumerable: true, configurable: false, writable: false, value: () => cleanup(gl) }
 			});
@@ -136,6 +158,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 			reject(reason)
 		}
 	});
+	//#endregion
 
 	//#region Skybox Cache
 	function initSkyboxCache(gl: WebGL2RenderingContext, skyboxNames: string[]) {
@@ -349,84 +372,84 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 			gl.useProgram(program);
 			currentProgramName = programName;
 			currentProgram = program;
-			currentBufferName = undefined;
-			currentBuffer = undefined;
+			// currentBufferName = undefined;
+			// currentBuffer = undefined;
 		}
 		return program;
 	}
 
-	function useBuffer(gl: WebGL2RenderingContext, bufferName: string, type: number, usage: number, size: 1 | 2 | 3 | 4, normalized: boolean, stride: number, offset: number, forceUse: boolean) {
-		const shaderInfo = shaderInfoMap.get(currentProgramName) || orThrow(`ShaderProgram not found: ${currentProgramName}`);
-		const bufferInfo = shaderInfo.bufferMap.get(bufferName) || orThrow(`Buffer not found: ${bufferName}`);
-		if (!forceUse && bufferInfo.buffer === currentBuffer) {
-			return bufferInfo.location;
-		}
-		type === gl.BYTE
-			|| type === gl.SHORT
-			|| type === gl.UNSIGNED_BYTE
-			|| type === gl.UNSIGNED_SHORT
-			|| type === gl.HALF_FLOAT
-			|| type === gl.FLOAT
-			|| orThrow(`Invalid buffer type. (${type})`);
-		usage === gl.STATIC_DRAW
-			|| usage === gl.DYNAMIC_DRAW
-			|| usage === gl.STREAM_DRAW
-			|| orThrow(`Invalid usage type. (${usage})`);
-		gl.bindBuffer(bufferInfo.target, bufferInfo.buffer);
-		gl.enableVertexAttribArray(bufferInfo.location);
-		gl.vertexAttribPointer(bufferInfo.location, size, type, normalized, stride, offset);
-		currentBufferName = bufferName;
-		currentBuffer = bufferInfo.buffer;
-		return bufferInfo.location;
-	}
+	// function useBuffer(gl: WebGL2RenderingContext, bufferName: string, type: number, usage: number, size: 1 | 2 | 3 | 4, normalized: boolean, stride: number, offset: number, forceUse: boolean) {
+	// 	const shaderInfo = shaderInfoMap.get(currentProgramName) || orThrow(`ShaderProgram not found: ${currentProgramName}`);
+	// 	const bufferInfo = shaderInfo.bufferMap.get(bufferName) || orThrow(`Buffer not found: ${bufferName}`);
+	// 	if (!forceUse && bufferInfo.buffer === currentBuffer) {
+	// 		return bufferInfo.location;
+	// 	}
+	// 	type === gl.BYTE
+	// 		|| type === gl.SHORT
+	// 		|| type === gl.UNSIGNED_BYTE
+	// 		|| type === gl.UNSIGNED_SHORT
+	// 		|| type === gl.HALF_FLOAT
+	// 		|| type === gl.FLOAT
+	// 		|| orThrow(`Invalid buffer type. (${type})`);
+	// 	usage === gl.STATIC_DRAW
+	// 		|| usage === gl.DYNAMIC_DRAW
+	// 		|| usage === gl.STREAM_DRAW
+	// 		|| orThrow(`Invalid usage type. (${usage})`);
+	// 	gl.bindBuffer(bufferInfo.target, bufferInfo.buffer);
+	// 	gl.enableVertexAttribArray(bufferInfo.location);
+	// 	gl.vertexAttribPointer(bufferInfo.location, size, type, normalized, stride, offset);
+	// 	currentBufferName = bufferName;
+	// 	currentBuffer = bufferInfo.buffer;
+	// 	return bufferInfo.location;
+	// }
 
-	function updateBuffer(gl: WebGL2RenderingContext, bufferName: string, target: number, type: number, usage: number, data: ArrayBuffer | ArrayBufferView, size: 1 | 2 | 3 | 4, normalized: boolean, stride: number, offset: number) {
-		const shaderInfo = shaderInfoMap.get(currentProgramName) || orThrow(`ShaderProgram not found: ${currentProgramName}`);
-		let bufferInfo = shaderInfo.bufferMap.get(bufferName);
-		if (!bufferInfo) {
-			target === gl.ARRAY_BUFFER
-				|| target === gl.ELEMENT_ARRAY_BUFFER
-				|| target === gl.COPY_READ_BUFFER
-				|| target === gl.COPY_WRITE_BUFFER
-				|| target === gl.TRANSFORM_FEEDBACK_BUFFER
-				|| target === gl.PIXEL_PACK_BUFFER
-				|| target === gl.PIXEL_UNPACK_BUFFER
-				|| orThrow(`Invalid buffer target. (${target})`);
+	// function updateBuffer(gl: WebGL2RenderingContext, bufferName: string, target: number, type: number, usage: number, data: ArrayBuffer | ArrayBufferView, size: 1 | 2 | 3 | 4, normalized: boolean, stride: number, offset: number) {
+	// 	const shaderInfo = shaderInfoMap.get(currentProgramName) || orThrow(`ShaderProgram not found: ${currentProgramName}`);
+	// 	let bufferInfo = shaderInfo.bufferMap.get(bufferName);
+	// 	if (!bufferInfo) {
+	// 		target === gl.ARRAY_BUFFER
+	// 			|| target === gl.ELEMENT_ARRAY_BUFFER
+	// 			|| target === gl.COPY_READ_BUFFER
+	// 			|| target === gl.COPY_WRITE_BUFFER
+	// 			|| target === gl.TRANSFORM_FEEDBACK_BUFFER
+	// 			|| target === gl.PIXEL_PACK_BUFFER
+	// 			|| target === gl.PIXEL_UNPACK_BUFFER
+	// 			|| orThrow(`Invalid buffer target. (${target})`);
 
-			const location = gl.getAttribLocation(shaderInfo.program, bufferName);
-			location >= 0 || orThrow(`Unknown buffer (${bufferName}) in program. (${currentProgramName})`);
-			bufferInfo = Object.create(null, {
-				buffer: { enumerable: true, configurable: false, writable: false, value: gl.createBuffer() || orThrow(`Could not create buffer. (${currentProgramName} - ${bufferName})`) },
-				location: { enumerable: true, configurable: false, writable: false, value: location },
-				target: { enumerable: true, configurable: false, writable: false, value: target }
-			}) as BufferInfo;
-			shaderInfo.bufferMap.set(bufferName, bufferInfo);
-		}
-		type === gl.BYTE
-			|| type === gl.SHORT
-			|| type === gl.UNSIGNED_BYTE
-			|| type === gl.UNSIGNED_SHORT
-			|| type === gl.HALF_FLOAT
-			|| type === gl.FLOAT
-			|| orThrow(`Invalid buffer type. (${type})`);
-		usage === gl.STATIC_DRAW
-			|| usage === gl.DYNAMIC_DRAW
-			|| usage === gl.STREAM_DRAW
-			|| orThrow(`Invalid usage type. (${usage})`);
-		gl.bindBuffer(bufferInfo.target, bufferInfo.buffer);
-		gl.bufferData(bufferInfo.target, data, usage);
-		gl.enableVertexAttribArray(bufferInfo.location);
-		gl.vertexAttribPointer(bufferInfo.location, size, type, normalized, stride, offset);
-		currentBufferName = bufferName;
-		currentBuffer = bufferInfo.buffer;
-		return bufferInfo.location;
-	}
+	// 		const location = gl.getAttribLocation(shaderInfo.program, bufferName);
+	// 		location >= 0 || orThrow(`Unknown buffer (${bufferName}) in program. (${currentProgramName})`);
+	// 		bufferInfo = Object.create(null, {
+	// 			buffer: { enumerable: true, configurable: false, writable: false, value: gl.createBuffer() || orThrow(`Could not create buffer. (${currentProgramName} - ${bufferName})`) },
+	// 			location: { enumerable: true, configurable: false, writable: false, value: location },
+	// 			target: { enumerable: true, configurable: false, writable: false, value: target }
+	// 		}) as BufferInfo;
+	// 		shaderInfo.bufferMap.set(bufferName, bufferInfo);
+	// 	}
+	// 	type === gl.BYTE
+	// 		|| type === gl.SHORT
+	// 		|| type === gl.UNSIGNED_BYTE
+	// 		|| type === gl.UNSIGNED_SHORT
+	// 		|| type === gl.HALF_FLOAT
+	// 		|| type === gl.FLOAT
+	// 		|| orThrow(`Invalid buffer type. (${type})`);
+	// 	usage === gl.STATIC_DRAW
+	// 		|| usage === gl.DYNAMIC_DRAW
+	// 		|| usage === gl.STREAM_DRAW
+	// 		|| orThrow(`Invalid usage type. (${usage})`);
+	// 	gl.bindBuffer(bufferInfo.target, bufferInfo.buffer);
+	// 	gl.bufferData(bufferInfo.target, data, usage);
+	// 	gl.enableVertexAttribArray(bufferInfo.location);
+	// 	gl.vertexAttribPointer(bufferInfo.location, size, type, normalized, stride, offset);
+	// 	currentBufferName = bufferName;
+	// 	currentBuffer = bufferInfo.buffer;
+	// 	return bufferInfo.location;
+	// }
 
 	function cleanupShaderCache(gl: WebGL2RenderingContext) {
 		shaderInfoMap.forEach(shaderInfo => {
-			shaderInfo.bufferMap.forEach(bufferInfo => {
-				gl.deleteBuffer(bufferInfo.buffer);
-			});
+			// shaderInfo.bufferMap.forEach(bufferInfo => {
+			// 	gl.deleteBuffer(bufferInfo.buffer);
+			// });
 			gl.deleteProgram(shaderInfo.program);
 			gl.deleteShader(shaderInfo.fragmentShader);
 			gl.deleteShader(shaderInfo.vertexShader);
@@ -435,6 +458,40 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 	}
 	//#endregion
 
+	//#region Mesh Cache
+	function initMeshCache(gl: WebGL2RenderingContext, meshNames: string[]) {
+		return Promise.all(meshNames.map(meshName => {
+			return new Promise((resolve, reject) => {
+				import(`../meshes/${meshName}.jsonc`)
+					.then<string>(m => m.default)
+					.then(jsonString => {
+						const mesh = new Mesh(gl, parse(jsonString));
+						const meshInfo: MeshInfo = Object.create(null, {
+							mesh: { enumerable: true, configurable: false, writable: false, value: mesh },
+							unload: { enumerable: true, configurable: false, writable: false, value: () => mesh.unload() }
+						});
+						meshInfoMap.set(meshName, meshInfo);
+						resolve(updateInitializationUpdateCallback(meshName));
+					})
+					.catch(reason => {
+						reject(updateInitializationUpdateCallback(reason));
+					});
+			});
+		}));
+	}
+
+	function getMesh(meshName: string) {
+		const meshInfo = meshInfoMap.get(meshName) || orThrow(`Mesh not found: ${meshName}`);
+		return meshInfo.mesh;
+	}
+
+	function cleanupMeshCache() {
+		meshInfoMap.forEach(meshInfo => meshInfo.unload());
+		meshInfoMap.clear();
+	}
+	//#endregion
+
+	//#region Common
 	function onContextLost(event: Event) {
 		orThrow("NotImplemented: onContextLost");
 	}
@@ -453,6 +510,6 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 		cleanupTextureCache();
 		cleanupShaderCache(gl);
 	}
-
+	//#endregion
 }
 //#endregion

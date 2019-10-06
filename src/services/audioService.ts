@@ -4,7 +4,7 @@ export interface IAudioService {
 	cleanup(): void;
 }
 
-//#region Typen
+//#region Types
 //#endregion
 
 //#region Audio Service

@@ -2,7 +2,7 @@
 	"files.exclude": {
 		".vscode": true,
 		".git": true,
-		"dist": true,
+		"dist": false,
 		"node_modules": true,
 		".gitignore": true,
 		"a-new-life.code-workspace": true,

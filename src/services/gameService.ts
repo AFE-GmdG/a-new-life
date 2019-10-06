@@ -15,7 +15,7 @@ export interface IGameService {
 	readonly gameLoop: GameLoop;
 }
 
-//#region Typen
+//#region Types
 export type UpdateLogicCallback = (totalTime: number, deltaTime: number, isFrontView: boolean) => boolean;
 export type UpdateGraphicCallback = (isFrontView: boolean) => void;
 export type ResizeCallback = (newWidth: number, newHeight: number) => void;

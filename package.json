@@ -4,8 +4,11 @@
   "description": "Working title for a browser based game.",
   "scripts": {
     "start": "webpack-dev-server --env debug",
+    "start:dist": "webpack-dev-server --env dist",
     "prebuild": "rimraf dist",
     "build": "webpack --env dist",
+    "prebuild:dev": "rimraf dist",
+    "build:dev": "webpack --env debug",
     "prebuild:sw": "rimraf lib/worker/serviceworker.*",
     "build:sw": "webpack --env debug --config webpack.sw.config.js && webpack --env release --config webpack.sw.config.js"
   },
@@ -20,6 +23,7 @@
     "copy-webpack-plugin": "5.0.4",
     "file-loader": "4.2.0",
     "html-webpack-plugin": "3.2.0",
+    "jsonc-parser": "2.1.1",
     "lz-string": "1.4.4",
     "raw-loader": "3.1.0",
     "rimraf": "3.0.0",

@@ -23,7 +23,7 @@ export function createGame(canvas: HTMLCanvasElement, applicationService: IAppli
 		try {
 			initializationUpdateCallback(0);
 			resizeCanvasToDisplaySize(canvas);
-			const graphicService = await createGraphicService(canvas, ["Skybox-Grass-512.jpg"], ["app.png", "f.png", "g.png"], ["simple", "flat", "floor"], [], createUpdateCallback(1, 90));
+			const graphicService = await createGraphicService(canvas, ["Skybox-Grass-512.jpg"], ["app.png", "f.png", "g.png"], ["simple", "flat", "floor"], ["f"], createUpdateCallback(1, 90));
 			const inputService = createInputService(canvas);
 			const audioService = await createAudioService();
 			const networkService = await createNetworkService();
