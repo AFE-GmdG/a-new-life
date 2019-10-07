@@ -57,6 +57,7 @@ type SubMesh = {
 	readonly attributeMap: ReadonlyMap<string, AttributeInfo>;
 	readonly vertexBufferMap: ReadonlyMap<string, WebGLBuffer>;
 	readonly indexBuffer: WebGLBuffer;
+	readonly elementCount: number;
 };
 
 type AttributeInfo = {
@@ -193,7 +194,8 @@ export class Mesh {
 				program: { enumerable: true, configurable: false, get: getProgram.bind(this) },
 				attributeMap: { enumerable: true, configurable: false, writable: false, value: attributeMap },
 				vertexBufferMap: { enumerable: true, configurable: false, writable: false, value: vertexBufferMap },
-				indexBuffer: { enumerable: true, configurable: false, writable: false, value: indexBuffer }
+				indexBuffer: { enumerable: true, configurable: false, writable: false, value: indexBuffer },
+				elementCount: { enumerable: true, configurable: false, writable: false, value: indices.length / 3 }
 			});
 
 			subMeshes.push(subMesh);
@@ -259,7 +261,7 @@ export class Mesh {
 
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, subMesh.indexBuffer);
 
-				gl.drawElements(gl.TRIANGLES, subMesh.triangleCount, gl.UNSIGNED_SHORT, 0);
+				gl.drawElements(gl.TRIANGLES, subMesh.elementCount, gl.UNSIGNED_SHORT, 0);
 			});
 
 
