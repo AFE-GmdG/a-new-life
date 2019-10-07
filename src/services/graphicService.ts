@@ -111,11 +111,6 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 			gl.enable(gl.DEPTH_TEST);
 			gl.depthFunc(gl.LEQUAL);
 
-			await initSkyboxCache(gl, skyboxNames);
-			await initTextureCache(gl, textureNames);
-			await initShaderCache(gl, shaderNames);
-			await initMeshCache(gl, meshNames);
-
 			const skyboxCache: SkyboxCache = Object.create(null, {
 				get: { enumerable: true, configurable: false, writable: false, value: getSkybox },
 				cleanup: { enumerable: true, configurable: false, writable: false, value: cleanupSkyboxCache }
@@ -153,6 +148,12 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 
 				cleanup: { enumerable: true, configurable: false, writable: false, value: () => cleanup(gl) }
 			});
+
+			await initSkyboxCache(gl, skyboxNames);
+			await initTextureCache(gl, textureNames);
+			await initShaderCache(gl, shaderNames);
+			await initMeshCache(graphicService, meshNames);
+
 			resolve(graphicService);
 		} catch (reason) {
 			reject(reason)
@@ -459,13 +460,13 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 	//#endregion
 
 	//#region Mesh Cache
-	function initMeshCache(gl: WebGL2RenderingContext, meshNames: string[]) {
+	function initMeshCache(graphicService: IGraphicService, meshNames: string[]) {
 		return Promise.all(meshNames.map(meshName => {
 			return new Promise((resolve, reject) => {
 				import(`../meshes/${meshName}.jsonc`)
 					.then<string>(m => m.default)
 					.then(jsonString => {
-						const mesh = new Mesh(gl, parse(jsonString));
+						const mesh = new Mesh(graphicService, parse(jsonString));
 						const meshInfo: MeshInfo = Object.create(null, {
 							mesh: { enumerable: true, configurable: false, writable: false, value: mesh },
 							unload: { enumerable: true, configurable: false, writable: false, value: () => mesh.unload() }

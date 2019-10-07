@@ -28,8 +28,6 @@ export function createGame(canvas: HTMLCanvasElement, applicationService: IAppli
 			const audioService = await createAudioService();
 			const networkService = await createNetworkService();
 
-			const { gl } = graphicService;
-
 			const gameService = createGameService(applicationService, graphicService, inputService, audioService, networkService, createMainMenu);
 
 			// The input service needs a redesign.

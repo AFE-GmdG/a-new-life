@@ -1,4 +1,5 @@
 import { orThrow } from "../common";
+import { IGraphicService } from "../services/graphicService";
 import { Matrix4x4 } from "../webGL/matrix4x4";
 
 //#region Types
@@ -7,7 +8,7 @@ type Normal = [number, number, number];
 type UV = [number, number];
 type Tri = [number, number, number];
 type Quad = [number, number, number, number];
-type AttributeInfo = {
+type JsonAttributeInfo = {
 	name: string;
 	components: string;
 }
@@ -24,7 +25,7 @@ type JsonSubMesh = {
 	/** skybox name */
 	s?: string;
 	/** attributes */
-	a: AttributeInfo[];
+	a: JsonAttributeInfo[];
 	/** uniforms */
 	u: JsonBufferInfo[];
 	/** face vertex indices */
@@ -50,16 +51,22 @@ type JsonMesh = {
 	sub: JsonSubMesh[];
 };
 
-type SubMeshParameter = {
-	mesh: Mesh;
-	gl: WebGL2RenderingContext;
-	vertices: Vertex[];
-	indices: number[];
-	attributes: AttributeInfo[];
-	uniforms: JsonBufferInfo[];
-	programName: string;
-	textureNames?: string[];
-	skyboxName?: string;
+type SubMesh = {
+	readonly programName: string;
+	readonly program: WebGLProgram;
+	readonly attributeMap: ReadonlyMap<string, AttributeInfo>;
+	readonly vertexBufferMap: ReadonlyMap<string, WebGLBuffer>;
+	readonly indexBuffer: WebGLBuffer;
+};
+
+type AttributeInfo = {
+	readonly subMeshIndex: number;
+	readonly programName: string;
+	readonly attributeName: string;
+	readonly bufferSize: number;
+	readonly elementCount: number;
+	readonly rawBufferData: readonly number[];
+	readonly vertexBufferData: Float32Array;
 };
 
 export type MeshInstance = {
@@ -74,15 +81,19 @@ export type MeshInstance = {
 
 //#region Mesh
 export class Mesh {
+	private graphicService: IGraphicService;
 	private maxInstanceId: number;
 	private instances: MeshInstance[];
-	private subMeshes: SubMesh[];
-	constructor(gl: WebGL2RenderingContext, jsonMesh: JsonMesh) {
+	private readonly subMeshes: readonly SubMesh[];
+
+	constructor(graphicService: IGraphicService, jsonMesh: JsonMesh) {
+		this.graphicService = graphicService;
 		this.maxInstanceId = 0;
 		this.instances = [];
+		const { gl } = graphicService;
 
 		// gehe über alle Faces und erzeuge dabei die Vertex- und Index Buffer.
-		this.subMeshes = jsonMesh.sub.reduce<SubMesh[]>((subMeshes, jsonSubMesh) => {
+		this.subMeshes = jsonMesh.sub.reduce<SubMesh[]>((subMeshes, jsonSubMesh, subMeshIndex) => {
 
 			const potentialsMap = new Map<number, { n?: number, uv?: number, i: number }[]>();
 			const vertices: Vertex[] = [];
@@ -134,11 +145,7 @@ export class Mesh {
 				["v", jsonMesh.n ? 7 : 4]
 			]);
 
-			const attributeMap = jsonSubMesh.a.reduce<Map<string, {
-				bufferSize: number;
-				elementCount: number;
-				vertexBufferData: number[];
-			}>>((getVertex, attributeInfo) => {
+			const [attributeMap, vertexBufferMap] = jsonSubMesh.a.reduce<[Map<string, AttributeInfo>, Map<string, WebGLBuffer>]>(([attributeMap, vertexBufferMap], attributeInfo) => {
 				const fns = attributeInfo.components.split(/\s*,\s*/g).map(component => {
 					if (component.charAt(0) === "g") {
 						!map.has(component) && map.set(component, jsonMesh.n
@@ -157,7 +164,7 @@ export class Mesh {
 
 				const bufferSize = fns.length * 4 * vertices.length;
 				const elementCount = fns.length;
-				const vertexBufferData = vertices.reduce<number[]>((acc, vertex) => {
+				const rawBufferData = vertices.reduce<number[]>((acc, vertex) => {
 					acc.push(...fns.reduce<number[]>((v, fn) => {
 						v.push(fn(vertex));
 						return v;
@@ -165,25 +172,31 @@ export class Mesh {
 					return acc;
 				}, []);
 
-				return getVertex.set(attributeInfo.name, {
+				return [attributeMap.set(attributeInfo.name, {
+					subMeshIndex,
+					programName: jsonSubMesh.m,
+					attributeName: attributeInfo.name,
 					bufferSize,
 					elementCount,
-					vertexBufferData
-				});
-			}, new Map());
+					rawBufferData,
+					vertexBufferData: new Float32Array(fns.length * vertices.length)
+				}), vertexBufferMap.set(attributeInfo.name,
+					gl.createBuffer() || orThrow(`Could not create VertexBuffer ${attributeInfo.name} for Mesh ${jsonMesh.name}`))];
+			}, [new Map(), new Map()]);
 
+			const indexBuffer = gl.createBuffer() || orThrow(`Could not create IndexBuffer for Mesh ${jsonMesh.name}`);
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int16Array(indices), gl.STATIC_DRAW);
 
-			// subMeshes.push(new SubMesh({
-			// 	mesh: this,
-			// 	gl,
-			// 	vertices,
-			// 	indices,
-			// 	attributes: jsonSubMesh.a,
-			// 	uniforms: jsonSubMesh.u,
-			// 	programName: jsonSubMesh.m,
-			// 	textureNames: jsonSubMesh.t,
-			// 	skyboxName: jsonSubMesh.s
-			// }));
+			const subMesh: SubMesh = Object.create(null, {
+				programName: { enumerable: true, configurable: false, writable: false, value: jsonSubMesh.m },
+				program: { enumerable: true, configurable: false, get: getProgram.bind(this) },
+				attributeMap: { enumerable: true, configurable: false, writable: false, value: attributeMap },
+				vertexBufferMap: { enumerable: true, configurable: false, writable: false, value: vertexBufferMap },
+				indexBuffer: { enumerable: true, configurable: false, writable: false, value: indexBuffer }
+			});
+
+			subMeshes.push(subMesh);
 			return subMeshes;
 
 			function addTri(v0: number, v1: number, v2: number, n0?: number, n1?: number, n2?: number, uv0?: number, uv1?: number, uv2?: number) {
@@ -215,6 +228,10 @@ export class Mesh {
 				vertices.push(vertex);
 				return potential.i;
 			}
+
+			function getProgram(this: Mesh) {
+				return this.graphicService.shaderCache.useProgram(jsonSubMesh.m);
+			}
 		}, []);
 	}
 
@@ -225,6 +242,27 @@ export class Mesh {
 
 	createInstance = (transformMatrix: Matrix4x4 = Matrix4x4.identity, ignoreOnBatchRender: boolean = false): MeshInstance => {
 		const render = (worldViewMatrix: Matrix4x4) => {
+			const { gl } = this.graphicService;
+			this.subMeshes.forEach(subMesh => {
+				gl.useProgram(subMesh.program);
+
+				subMesh.vertexBufferMap.forEach((buffer, attribute) => {
+					const location = gl.getAttribLocation(subMesh.program, attribute);
+					gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+					gl.enableVertexAttribArray(location);
+					gl.vertexAttribPointer(location, subMesh.attributeMap.get(attribute)!.elementCount, gl.FLOAT, false, 0, 0);
+				});
+
+				// todo: get uniform location
+				// const dataxlocation = gl.getuniformlocation(program, name)
+				// gl.uniformMatrix4fv(dataxlocation, false, elements)
+
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, subMesh.indexBuffer);
+
+				gl.drawElements(gl.TRIANGLES, subMesh.triangleCount, gl.UNSIGNED_SHORT, 0);
+			});
+
+
 		};
 
 		const remove = () => {
@@ -236,6 +274,7 @@ export class Mesh {
 			ignoreOnBatchRender: { enumerable: true, configurable: false, writable: true, value: ignoreOnBatchRender },
 
 			updateTransformMatrix: { enumerable: true, configurable: false, writable: false, value: (newTransformMatrix: Matrix4x4) => { transformMatrix = newTransformMatrix; } },
+
 			render: { enumerable: true, configurable: false, writable: false, value: render },
 			remove: { enumerable: true, configurable: false, writable: false, value: remove }
 		});
@@ -244,44 +283,27 @@ export class Mesh {
 		return instance;
 	}
 
+	updateBuffer = (updateBuffer?: (attributeInfo: AttributeInfo) => boolean) => {
+		this.subMeshes.forEach(subMesh => subMesh.attributeMap.forEach(attributeInfo => {
+			if (!updateBuffer || updateBuffer(attributeInfo)) {
+				if (!updateBuffer) {
+					attributeInfo.vertexBufferData.set(attributeInfo.rawBufferData);
+				}
+				const { gl, shaderCache } = this.graphicService;
+				const buffer = subMesh.vertexBufferMap.get(attributeInfo.attributeName)!;
+				const program = shaderCache.useProgram(attributeInfo.programName);
+				const location = gl.getAttribLocation(program, attributeInfo.attributeName);
+				location >= 0 || orThrow(`Unknown buffer (${attributeInfo.attributeName}) in program ${attributeInfo.programName}.`);
+
+				gl.useProgram(program);
+				gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+				gl.bufferData(gl.ARRAY_BUFFER, attributeInfo.vertexBufferData, gl.STATIC_DRAW);
+			}
+		}));
+	}
+
 	renderBatch = (worldViewMatrix: Matrix4x4) => {
 		throw new Error("Not Implemented.");
-	}
-}
-
-class SubMesh {
-	private vertices: Vertex[];
-	private vertexBuffer: WebGLBuffer;
-	private indices: number[];
-	private programName: string;
-	private texturNames?: string[];
-	private skyboxName?: string;
-
-	constructor({
-		mesh,
-		gl,
-		vertices,
-		indices,
-		attributes,
-		uniforms,
-		programName,
-		textureNames,
-		skyboxName
-	}: SubMeshParameter) {
-
-		debugger;
-
-		attributes.forEach(attribute => {
-			const components = attribute.components.split(/\s*,\s*/g);
-
-		});
-
-		this.indices = indices;
-		this.programName = programName;
-		this.texturNames = textureNames;
-	}
-
-	public draw() {
 	}
 }
 //#endregion
