@@ -51,10 +51,10 @@
 		}],
 		"u": [{
 			"name": "u_Transform",
-			"size": 16
+			"type": "Matrix4f"
 		}, {
 			"name": "u_Color",
-			"size": 4
+			"type": "4f"
 		}],
 		"iv": [
 			[3, 2, 0, 1],

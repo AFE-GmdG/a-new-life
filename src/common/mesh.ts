@@ -12,10 +12,16 @@ type JsonAttributeInfo = {
 	name: string;
 	components: string;
 }
-type JsonUniformInfo = {
+type JsonUniformTypeInfo = {
 	name: string;
-	size: number;
-}
+	type: "1f" | "2f" | "3f" | "4f" | "1i" | "2i" | "3i" | "4i" | "Matrix2f" | "Matrix3f" | "Matrix4f";
+};
+type JsonUniformArrayInfo = {
+	name: string;
+	type: "1fv" | "2fv" | "3fv" | "4fv" | "1iv" | "2iv" | "3iv" | "4iv" | "Matrix2fv" | "Matrix3fv" | "Matrix4fv";
+	length: number;
+};
+type JsonUniformInfo = JsonUniformTypeInfo | JsonUniformArrayInfo;
 
 type JsonSubMesh = {
 	/** material name */
@@ -71,6 +77,8 @@ type AttributeInfo = {
 };
 
 type UniformInfo = {
+	readonly subMeshIndex: number;
+	readonly programName: string;
 	readonly uniformName: string;
 };
 
@@ -189,9 +197,11 @@ export class Mesh {
 					gl.createBuffer() || orThrow(`Could not create VertexBuffer ${attributeInfo.name} for Mesh ${jsonMesh.name}`))];
 			}, [new Map(), new Map()]);
 
-			jsonSubMesh.u.reduce<any[]>((acc, uniformInfo) => {
-				return acc;
-			}, []);
+			jsonSubMesh.u.reduce<[Map<string, UniformInfo>, Map<string, WebGLBuffer>]>(([uniformMap, vertexBufferMap], uniformInfo) => {
+
+				return [uniformMap,
+					vertexBufferMap];
+			}, [new Map(), vertexBufferMap]);
 
 			const indexBuffer = gl.createBuffer() || orThrow(`Could not create IndexBuffer for Mesh ${jsonMesh.name}`);
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
