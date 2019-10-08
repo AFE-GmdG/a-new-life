@@ -12,7 +12,7 @@ type JsonAttributeInfo = {
 	name: string;
 	components: string;
 }
-type JsonBufferInfo = {
+type JsonUniformInfo = {
 	name: string;
 	size: number;
 }
@@ -27,7 +27,7 @@ type JsonSubMesh = {
 	/** attributes */
 	a: JsonAttributeInfo[];
 	/** uniforms */
-	u: JsonBufferInfo[];
+	u: JsonUniformInfo[];
 	/** face vertex indices */
 	iv: (Tri | Quad)[];
 	/** face normal indices */
@@ -68,6 +68,10 @@ type AttributeInfo = {
 	readonly elementCount: number;
 	readonly rawBufferData: readonly number[];
 	readonly vertexBufferData: Float32Array;
+};
+
+type UniformInfo = {
+	readonly uniformName: string;
 };
 
 export type MeshInstance = {
@@ -184,6 +188,10 @@ export class Mesh {
 				}), vertexBufferMap.set(attributeInfo.name,
 					gl.createBuffer() || orThrow(`Could not create VertexBuffer ${attributeInfo.name} for Mesh ${jsonMesh.name}`))];
 			}, [new Map(), new Map()]);
+
+			jsonSubMesh.u.reduce<any[]>((acc, uniformInfo) => {
+				return acc;
+			}, []);
 
 			const indexBuffer = gl.createBuffer() || orThrow(`Could not create IndexBuffer for Mesh ${jsonMesh.name}`);
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
