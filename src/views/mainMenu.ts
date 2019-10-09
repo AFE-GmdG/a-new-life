@@ -7,6 +7,22 @@ export function createMainMenu(gameService: IGameService) {
 	const { meshCache } = graphicService;
 
 	const fMesh = meshCache.get("f");
+	fMesh.updateBuffer((attributeInfo, buffer) => {
+		buffer.set(attributeInfo.rawBufferData);
+		return true;
+	});
+		// updateUniform: ((uniformInfo, buffer) => {
+		// 	const float32Array = buffer as Float32Array;
+		// 	switch (uniformInfo.uniformName) {
+		// 		case "u_Transform":
+		// 			float32Array.set(Matrix4x4.identity.elements);
+		// 			break;
+		// 		case "u_Color":
+		// 			float32Array.set([0.95, 0.0, 0.05, 1.0]);
+		// 			break;
+		// 	}
+		// })
+
 	let cameraPos = new Float3(0, -10, 3.5);
 	let cameraLookAt = new Float3(0, 0, 3.5);
 	let cameraUp = new Float3(0, 0, 1);
@@ -36,7 +52,6 @@ export function createMainMenu(gameService: IGameService) {
 
 		const { x: mx, y: my } = inputService.mouseState.relativePos;
 		camera = Matrix4x4.createLookAtMatrix(Float3.add(cameraPos, new Float3(mx || 0, 0, my || 0)), cameraLookAt, cameraUp);
-		fMesh.updateBuffer();
 		fInstance.updateTransformMatrix(Matrix4x4.createRotationMatrix(new Float3(0, 0, 1), totalTime * 0.001));
 
 		return true;

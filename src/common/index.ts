@@ -1,4 +1,4 @@
-export { orThrow } from "./assert";
+export { assertNever, orThrow } from "./assert";
 export { delay } from "./delay";
 export { IGame, createGame } from "./game";
 export { LocalizedStrings } from "./localizedStrings";

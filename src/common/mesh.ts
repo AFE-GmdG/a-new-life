@@ -1,26 +1,34 @@
-import { orThrow } from "../common";
+import { assertNever, orThrow } from "../common";
 import { IGraphicService } from "../services/graphicService";
 import { Matrix4x4 } from "../webGL/matrix4x4";
 
 //#region Types
 type Vertex = number[];
+
 type Normal = [number, number, number];
+
 type UV = [number, number];
+
 type Tri = [number, number, number];
+
 type Quad = [number, number, number, number];
+
 type JsonAttributeInfo = {
 	name: string;
 	components: string;
 }
+
 type JsonUniformTypeInfo = {
 	name: string;
 	type: "1f" | "2f" | "3f" | "4f" | "1i" | "2i" | "3i" | "4i" | "Matrix2f" | "Matrix3f" | "Matrix4f";
 };
+
 type JsonUniformArrayInfo = {
 	name: string;
 	type: "1fv" | "2fv" | "3fv" | "4fv" | "1iv" | "2iv" | "3iv" | "4iv" | "Matrix2fv" | "Matrix3fv" | "Matrix4fv";
 	length: number;
 };
+
 type JsonUniformInfo = JsonUniformTypeInfo | JsonUniformArrayInfo;
 
 type JsonSubMesh = {
@@ -61,7 +69,9 @@ type SubMesh = {
 	readonly programName: string;
 	readonly program: WebGLProgram;
 	readonly attributeMap: ReadonlyMap<string, AttributeInfo>;
-	readonly vertexBufferMap: ReadonlyMap<string, WebGLBuffer>;
+	readonly attributeBufferMap: ReadonlyMap<string, AttributeBuffer>;
+	readonly uniformMap: ReadonlyMap<string, UniformInfo>;
+	readonly uniformBufferMap: ReadonlyMap<string, UniformBuffer>;
 	readonly indexBuffer: WebGLBuffer;
 	readonly elementCount: number;
 };
@@ -73,13 +83,24 @@ type AttributeInfo = {
 	readonly bufferSize: number;
 	readonly elementCount: number;
 	readonly rawBufferData: readonly number[];
-	readonly vertexBufferData: Float32Array;
 };
+
+type AttributeBuffer = {
+	readonly bufferData: Float32Array;
+	readonly buffer: WebGLBuffer;
+};
+
+export type UpdateAttributeBufferCallback = (attributeInfo: AttributeInfo, buffer: Float32Array) => boolean;
 
 type UniformInfo = {
 	readonly subMeshIndex: number;
 	readonly programName: string;
 	readonly uniformName: string;
+};
+
+type UniformBuffer = {
+	readonly buffer: ArrayBufferView;
+	readonly writeBuffer: (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: ArrayBufferView) => void;
 };
 
 export type MeshInstance = {
@@ -158,8 +179,13 @@ export class Mesh {
 				["v", jsonMesh.n ? 7 : 4]
 			]);
 
-			const [attributeMap, vertexBufferMap] = jsonSubMesh.a.reduce<[Map<string, AttributeInfo>, Map<string, WebGLBuffer>]>(([attributeMap, vertexBufferMap], attributeInfo) => {
-				const fns = attributeInfo.components.split(/\s*,\s*/g).map(component => {
+			const attributeMap = new Map<string, AttributeInfo>();
+			const attributeBufferMap = new Map<string, AttributeBuffer>();
+			const uniformMap = new Map<string, UniformInfo>();
+			const uniformBufferMap = new Map<string, UniformBuffer>();
+
+			jsonSubMesh.a.forEach(({ name, components }) => {
+				const fns = components.split(/\s*,\s*/g).map(component => {
 					if (component.charAt(0) === "g") {
 						!map.has(component) && map.set(component, jsonMesh.n
 							? jsonMesh.uv
@@ -185,23 +211,131 @@ export class Mesh {
 					return acc;
 				}, []);
 
-				return [attributeMap.set(attributeInfo.name, {
+				attributeMap.set(name, {
 					subMeshIndex,
 					programName: jsonSubMesh.m,
-					attributeName: attributeInfo.name,
+					attributeName: name,
 					bufferSize,
 					elementCount,
 					rawBufferData,
-					vertexBufferData: new Float32Array(fns.length * vertices.length)
-				}), vertexBufferMap.set(attributeInfo.name,
-					gl.createBuffer() || orThrow(`Could not create VertexBuffer ${attributeInfo.name} for Mesh ${jsonMesh.name}`))];
-			}, [new Map(), new Map()]);
+				});
 
-			jsonSubMesh.u.reduce<[Map<string, UniformInfo>, Map<string, WebGLBuffer>]>(([uniformMap, vertexBufferMap], uniformInfo) => {
+				attributeBufferMap.set(name, {
+					bufferData: new Float32Array(fns.length * vertices.length),
+					buffer: gl.createBuffer() || orThrow(`Could not create VertexBuffer ${name} for Mesh ${jsonMesh.name}`)
+				});
+			});
 
-				return [uniformMap,
-					vertexBufferMap];
-			}, [new Map(), vertexBufferMap]);
+			jsonSubMesh.u.forEach(uniformInfo => {
+				const { name } = uniformInfo;
+
+				let arrayBufferView: ArrayBufferView;
+				let writeBuffer: (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: ArrayBufferView) => void;
+
+				switch (uniformInfo.type) {
+					case "1f":
+						arrayBufferView = new Float32Array(1);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniform1fv(location, buffer)
+						break;
+					case "1fv":
+						arrayBufferView = new Float32Array(1 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniform1fv(location, buffer)
+						break;
+					case "2f":
+						arrayBufferView = new Float32Array(2);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniform2fv(location, buffer)
+						break;
+					case "2fv":
+						arrayBufferView = new Float32Array(2 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniform2fv(location, buffer)
+						break;
+					case "3f":
+						arrayBufferView = new Float32Array(3);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniform3fv(location, buffer)
+						break;
+					case "3fv":
+						arrayBufferView = new Float32Array(3 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniform3fv(location, buffer)
+						break;
+					case "4f":
+						arrayBufferView = new Float32Array(4);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniform4fv(location, buffer)
+						break;
+					case "4fv":
+						arrayBufferView = new Float32Array(4 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniform4fv(location, buffer)
+						break;
+					case "1i":
+						arrayBufferView = new Int32Array(1);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Int32Array) => gl.uniform1iv(location, buffer)
+						break;
+					case "1iv":
+						arrayBufferView = new Int32Array(1 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Int32Array) => gl.uniform1iv(location, buffer)
+						break;
+					case "2i":
+						arrayBufferView = new Int32Array(2);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Int32Array) => gl.uniform2iv(location, buffer)
+						break;
+					case "2iv":
+						arrayBufferView = new Int32Array(2 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Int32Array) => gl.uniform2iv(location, buffer)
+						break;
+					case "3i":
+						arrayBufferView = new Int32Array(3);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Int32Array) => gl.uniform3iv(location, buffer)
+						break;
+					case "3iv":
+						arrayBufferView = new Int32Array(3 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Int32Array) => gl.uniform3iv(location, buffer)
+						break;
+					case "4i":
+						arrayBufferView = new Int32Array(4);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Int32Array) => gl.uniform4iv(location, buffer)
+						break;
+					case "4iv":
+						arrayBufferView = new Int32Array(4 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Int32Array) => gl.uniform4iv(location, buffer)
+						break;
+					case "Matrix2f":
+						arrayBufferView = new Float32Array(4);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniformMatrix2fv(location, false, buffer)
+						break;
+					case "Matrix2fv":
+						arrayBufferView = new Float32Array(4 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniformMatrix2fv(location, false, buffer)
+						break;
+					case "Matrix3f":
+						arrayBufferView = new Float32Array(9);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniformMatrix3fv(location, false, buffer)
+						break;
+					case "Matrix3fv":
+						arrayBufferView = new Float32Array(9 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniformMatrix3fv(location, false, buffer)
+						break;
+					case "Matrix4f":
+						arrayBufferView = new Float32Array(16);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniformMatrix4fv(location, false, buffer)
+						break;
+					case "Matrix4fv":
+						arrayBufferView = new Float32Array(16 * uniformInfo.length);
+						writeBuffer = (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: Float32Array) => gl.uniformMatrix4fv(location, false, buffer)
+						break;
+					default:
+						throw new Error(`Unknown uniform type: ${uniformInfo!.type}`);
+				}
+
+				uniformMap.set(name, {
+					subMeshIndex,
+					programName: jsonSubMesh.m,
+					uniformName: name
+				});
+
+				uniformBufferMap.set(name, {
+					buffer: arrayBufferView,
+					writeBuffer
+				});
+			});
 
 			const indexBuffer = gl.createBuffer() || orThrow(`Could not create IndexBuffer for Mesh ${jsonMesh.name}`);
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -211,7 +345,9 @@ export class Mesh {
 				programName: { enumerable: true, configurable: false, writable: false, value: jsonSubMesh.m },
 				program: { enumerable: true, configurable: false, get: getProgram.bind(this) },
 				attributeMap: { enumerable: true, configurable: false, writable: false, value: attributeMap },
-				vertexBufferMap: { enumerable: true, configurable: false, writable: false, value: vertexBufferMap },
+				attributeBufferMap: { enumerable: true, configurable: false, writable: false, value: attributeBufferMap },
+				uniformMap: { enumerable: true, configurable: false, writable: false, value: uniformMap },
+				uniformBufferMap: { enumerable: true, configurable: false, writable: false, value: uniformBufferMap },
 				indexBuffer: { enumerable: true, configurable: false, writable: false, value: indexBuffer },
 				elementCount: { enumerable: true, configurable: false, writable: false, value: indices.length / 3 }
 			});
@@ -263,26 +399,27 @@ export class Mesh {
 	createInstance = (transformMatrix: Matrix4x4 = Matrix4x4.identity, ignoreOnBatchRender: boolean = false): MeshInstance => {
 		const render = (worldViewMatrix: Matrix4x4) => {
 			const { gl } = this.graphicService;
-			this.subMeshes.forEach(subMesh => {
-				gl.useProgram(subMesh.program);
+			this.subMeshes.forEach(({ programName, program, attributeMap, attributeBufferMap, uniformMap, uniformBufferMap, indexBuffer, elementCount }) => {
+				gl.useProgram(program);
 
-				subMesh.vertexBufferMap.forEach((buffer, attribute) => {
-					const location = gl.getAttribLocation(subMesh.program, attribute);
+				attributeMap.forEach(({ attributeName, elementCount }) => {
+					const { buffer } = attributeBufferMap.get(attributeName)!;
+					const location = gl.getAttribLocation(program, attributeName);
 					gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 					gl.enableVertexAttribArray(location);
-					gl.vertexAttribPointer(location, subMesh.attributeMap.get(attribute)!.elementCount, gl.FLOAT, false, 0, 0);
+					gl.vertexAttribPointer(location, elementCount, gl.FLOAT, false, 0, 0);
 				});
 
-				// todo: get uniform location
-				// const dataxlocation = gl.getuniformlocation(program, name)
-				// gl.uniformMatrix4fv(dataxlocation, false, elements)
+				uniformMap.forEach(({ uniformName }) => {
+					const { buffer, writeBuffer } = uniformBufferMap.get(uniformName)!;
+					const location = gl.getUniformLocation(program, uniformName) || orThrow(`Could not get uniform location ${uniformName} in shader ${programName}`);
+					writeBuffer(gl, location, buffer);
+				});
 
-				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, subMesh.indexBuffer);
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-				gl.drawElements(gl.TRIANGLES, subMesh.elementCount, gl.UNSIGNED_SHORT, 0);
+				gl.drawElements(gl.TRIANGLES, elementCount, gl.UNSIGNED_SHORT, 0);
 			});
-
-
 		};
 
 		const remove = () => {
@@ -303,23 +440,34 @@ export class Mesh {
 		return instance;
 	}
 
-	updateBuffer = (updateBuffer?: (attributeInfo: AttributeInfo) => boolean) => {
-		this.subMeshes.forEach(subMesh => subMesh.attributeMap.forEach(attributeInfo => {
-			if (!updateBuffer || updateBuffer(attributeInfo)) {
-				if (!updateBuffer) {
-					attributeInfo.vertexBufferData.set(attributeInfo.rawBufferData);
+	updateBuffer = (updateAttributeBufferCallback?: UpdateAttributeBufferCallback) => {
+		debugger;
+		const { gl } = this.graphicService;
+		if (!updateAttributeBufferCallback) {
+			this.subMeshes.forEach(({ attributeMap, attributeBufferMap }) => {
+				attributeMap.forEach(({ attributeName, rawBufferData }) => {
+					// VertexBuffer are always Float32Arrays - Subject to change in future
+					const { bufferData, buffer } = attributeBufferMap.get(attributeName)!;
+					bufferData.set(rawBufferData);
+					gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+					gl.bufferData(gl.ARRAY_BUFFER, bufferData, gl.STATIC_DRAW);
+				});
+			});
+			return;
+		}
+		this.subMeshes.forEach(({ attributeMap, attributeBufferMap }) => {
+			attributeMap.forEach(attributeInfo => {
+				const { attributeName, rawBufferData } = attributeInfo;
+				// VertexBuffer are always Float32Arrays - Subject to change in future
+				const { bufferData, buffer } = attributeBufferMap.get(attributeName)!;
+				if (!updateAttributeBufferCallback(attributeInfo, bufferData)) {
+					return;
 				}
-				const { gl, shaderCache } = this.graphicService;
-				const buffer = subMesh.vertexBufferMap.get(attributeInfo.attributeName)!;
-				const program = shaderCache.useProgram(attributeInfo.programName);
-				const location = gl.getAttribLocation(program, attributeInfo.attributeName);
-				location >= 0 || orThrow(`Unknown buffer (${attributeInfo.attributeName}) in program ${attributeInfo.programName}.`);
-
-				gl.useProgram(program);
+				bufferData.set(rawBufferData);
 				gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-				gl.bufferData(gl.ARRAY_BUFFER, attributeInfo.vertexBufferData, gl.STATIC_DRAW);
-			}
-		}));
+				gl.bufferData(gl.ARRAY_BUFFER, bufferData, gl.STATIC_DRAW);
+			});
+		});
 	}
 
 	renderBatch = (worldViewMatrix: Matrix4x4) => {
