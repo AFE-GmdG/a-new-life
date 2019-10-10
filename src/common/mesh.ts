@@ -103,11 +103,15 @@ type UniformBuffer = {
 	readonly writeBuffer: (gl: WebGL2RenderingContext, location: WebGLUniformLocation, buffer: ArrayBufferView) => void;
 };
 
+export type UpdateUniformBufferCallback = (meshInstance: MeshInstance, uniformInfo: UniformInfo, buffer: ArrayBufferView) => void;
+
 export type MeshInstance = {
 	readonly instanceId: number;
 	ignoreOnBatchRender: boolean;
+	readonly transformMatrix: Matrix4x4;
 
 	updateTransformMatrix(transformMatrix: Matrix4x4): void;
+	updateUniforms(updateUniformBufferCallback: UpdateUniformBufferCallback): void;
 	render(worldViewMatrix: Matrix4x4): void;
 	remove(): void;
 };
@@ -397,6 +401,15 @@ export class Mesh {
 	}
 
 	createInstance = (transformMatrix: Matrix4x4 = Matrix4x4.identity, ignoreOnBatchRender: boolean = false): MeshInstance => {
+		const updateUniforms = (updateUniformBufferCallback: UpdateUniformBufferCallback) => {
+			this.subMeshes.forEach(({ uniformMap, uniformBufferMap }) => {
+				uniformMap.forEach((uniformInfo, uniformName) => {
+					const { buffer } = uniformBufferMap.get(uniformName)!;
+					updateUniformBufferCallback(instance, uniformInfo, buffer);
+				});
+			});
+		};
+
 		const render = (worldViewMatrix: Matrix4x4) => {
 			const { gl } = this.graphicService;
 			this.subMeshes.forEach(({ programName, program, attributeMap, attributeBufferMap, uniformMap, uniformBufferMap, indexBuffer, elementCount }) => {
@@ -429,9 +442,10 @@ export class Mesh {
 		const instance: MeshInstance = Object.create(null, {
 			instanceId: { enumerable: true, configurable: false, writable: false, value: ++this.maxInstanceId },
 			ignoreOnBatchRender: { enumerable: true, configurable: false, writable: true, value: ignoreOnBatchRender },
+			transformMatrix: { enumerable: true, configurable: false, get: () => transformMatrix },
 
 			updateTransformMatrix: { enumerable: true, configurable: false, writable: false, value: (newTransformMatrix: Matrix4x4) => { transformMatrix = newTransformMatrix; } },
-
+			updateUniforms: { enumerable: true, configurable: false, writable: false, value: updateUniforms },
 			render: { enumerable: true, configurable: false, writable: false, value: render },
 			remove: { enumerable: true, configurable: false, writable: false, value: remove }
 		});
@@ -441,7 +455,6 @@ export class Mesh {
 	}
 
 	updateBuffer = (updateAttributeBufferCallback?: UpdateAttributeBufferCallback) => {
-		debugger;
 		const { gl } = this.graphicService;
 		if (!updateAttributeBufferCallback) {
 			this.subMeshes.forEach(({ attributeMap, attributeBufferMap }) => {

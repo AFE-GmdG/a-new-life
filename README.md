@@ -20,7 +20,7 @@ Right-Hand-Coordinate-System, therefore I stay with this:
 - Support for global events
 - Support for ingame remapping
 - Support for Profile load/save
-### [ ] Redesign ShaderProgram
+### [x] Redesign ShaderProgram
 - Aktuell kann pro ShaderProgramm nur je 1 (Attribut)Buffer pro im Programm
 	verwendeten Attribut verwendet werden. Möchte ich mehrere Meshes mit
 	demselben Programm benutzen muss immer der neue Buffer kopiert werden,
@@ -30,44 +30,47 @@ Right-Hand-Coordinate-System, therefore I stay with this:
 	macht dies Manuell.
 - Konzeptuell sollte das erstellen der Buffer am Mesh und nicht am Programm
 	hängen.
-### [ ] Float2|3|4 / Matrix2x2|3x3|4x4
-- Die Matheklassen (Float2|3|4, Matrix2x2|3x3|4x4) sollten die Möglichkeit
-	bekommen, ohne new Berechnungsergebnisse in einer übergebenen Instanz
-	abzuspeichern. Eventuell sollten die Bestandteile von Einzelvariablen auf
+### Float2|3|4 / Matrix2x2|3x3|4x4
+- [ ] Die Matheklassen (Float2|3|4, Matrix2x2|3x3|4x4) sollten die
+	Möglichkeit bekommen, ohne new Berechnungsergebnisse in einer
+	übergebenen Instanz abzuspeichern.
+- [ ] Eventuell sollten die Bestandteile von Einzelvariablen auf
 	Float32Array, Float64Array oder NumberArray umgestellt werden.
 	**(Generisch?)**
-### [ ] MeshCache erstellen
-- Ein Mesh definiert Vertices und Indices
-- Vertices haben Variabel viele Eigenschaften
-- Jedes Mesh besteht aus mindestens einem Submesh.
-- Jedes Submesh verweist auf genau ein Shaderprogramm. (Damit sind mehrere
-	Texturen / Materialien möglich)
-- Jedes Submesh verweist auf seinen eigenen Satz an Texturen. (Damit kann
-	dasselbe Programm mit unterschiedlichen Texturen verwendet werden.)
-- ggf. kann jedes Submesh seinen Rendertyp selbst festlegen, um z.B.
+### MeshCache erstellen
+- [x] Ein Mesh definiert Vertices und Indices
+- [x] Vertices haben Variabel viele Eigenschaften
+- [x] Jedes Mesh besteht aus mindestens einem Submesh.
+- [x] Jedes Submesh verweist auf genau ein Shaderprogramm. (Damit sind
+	mehrere Texturen / Materialien möglich)
+- [ ] Jedes Submesh verweist auf seinen eigenen Satz an Texturen. (Damit
+  kann dasselbe Programm mit unterschiedlichen Texturen verwendet werden.)
+- [ ] ggf. kann jedes Submesh seinen Rendertyp selbst festlegen, um z.B.
 	Gitternetze und gefüllte Flächen parallel zu benutzen, möglicherweise
 	nicht in der ersten Version.
-- Mehrere Submeshes werden rein duch IndexBufferGrenzen festgelegt und
-	teilen sich alle Vertices.
-- Blender Vertex Groups müssen Teil der Vertexdefinition und vollständig
-	sein. (Es müssen alle Vertices einen VertexGruppenWert besitzen, Lücken
-	wie in Blender erlaubt müssen z.B. mit 0.0 aufgefüllt werden. Es obliegt
-	dem Shaderprogramm, wie Vertexgruppen am Vertex verteilt werden.)
-- Alle Shaderprogramme eines Meshes müssen dieselbe Vertexdefinition
-	benutzen. (Alternativ könnte das Subsesh bestimmte Vertexbestandteile
-	dem Shaderprogramm zuordnen - dies würde im Endeffekt vermutlich jedoch
-	zu mehr Buffern mit ähnlichen / teilweise identischen Werten führen;
-	**passendes Beispiel erzeugen**)
-- Wie Schatten anderer Meshes berechnet werden muss ich mir erst angucken,
-	Vermutlich muss es Instanzbezogene Daten geben, sehr wahrscheinlich sind
-	mehrere Renderpasses nötig
-- In einer späteren Version können ggf. Modifier wie Array, Mirror,
+- [x] ~~Mehrere Submeshes werden rein duch IndexBufferGrenzen festgelegt
+	und teilen sich alle Vertices.~~
+- [ ] Blender Vertex Groups müssen Teil der Vertexdefinition und
+	vollständig sein. (Es müssen alle Vertices einen VertexGruppenWert
+	besitzen, Lücken wie in Blender erlaubt müssen z.B. mit 0.0 aufgefüllt
+	werden. Es obliegt dem Shaderprogramm, wie Vertexgruppen am Vertex
+	verteilt werden.)
+- [x] ~~Alle Shaderprogramme eines Meshes müssen dieselbe Vertexdefinition
+	benutzen.~~ (~~Alternativ~~ könnte das Subsesh bestimmte
+	Vertexbestandteile dem Shaderprogramm zuordnen - dies würde im Endeffekt
+	vermutlich jedoch zu mehr Buffern mit ähnlichen / teilweise identischen
+	Werten führen)
+- [ ] Wie Schatten anderer Meshes berechnet werden muss ich mir erst
+	angucken, vermutlich muss es Instanzbezogene Daten geben, sehr
+	wahrscheinlich sind mehrere Renderpasses nötig
+- [ ] In einer späteren Version können ggf. Modifier wie Array, Mirror,
 	Subdevision Surface und Armature eingeführt werden.
-- Vermutlich muss ich ein eigenes Dateiformat entwickeln, welches meine
-	Features abdeckt. Damit muss ich vermutlich auch einen Exporter für
-	Blender in diesem Format schreiben... (Irgs: Python)
-	Das Dateiformat ist dann entweder JSON (Vermutlich ist das aber
-	Platzverschwendung) oder ein Binärdatentyp und sollte asynchron geladen
+- [x] Vermutlich muss ich ein eigenes Dateiformat entwickeln, welches meine
+	Features abdeckt.
+- [ ] Damit muss ich vermutlich auch einen Exporter für Blender in diesem
+	Format schreiben... (Irgs: Python)
+- [x] Das Dateiformat ist dann entweder JSON ~~(Vermutlich ist das aber
+	Platzverschwendung) oder ein Binärdatentyp~~ und sollte asynchron geladen
 	werden.
 
 ## Bugs
