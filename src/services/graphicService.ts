@@ -193,17 +193,23 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 									gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
 									gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
 									gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.BROWSER_DEFAULT_WEBGL);
-									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									// PosX = Right
+									ctx.drawImage(image, size * 2, 0, size, size, 0, 0, size, size);
 									gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
+									// NegX = Left
 									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
 									gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
-									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									// PosY = Front
+									ctx.drawImage(image, size * 2, size, size, size, 0, 0, size, size);
 									gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
-									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									// NegY = Back
+									ctx.drawImage(image, size, 0, size, size, 0, 0, size, size);
 									gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
-									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									// PosZ = Top
+									ctx.drawImage(image, size, size, size, size, 0, 0, size, size);
 									gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
-									ctx.drawImage(image, 0, 0, size, size, 0, 0, size, size);
+									// NegZ = Bottom
+									ctx.drawImage(image, 0, size, size, size, 0, 0, size, size);
 									gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGBA16F, size, size, 0, gl.RGBA, gl.FLOAT, canvas);
 								}
 								return texture;

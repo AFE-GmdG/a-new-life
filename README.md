@@ -44,7 +44,7 @@ Right-Hand-Coordinate-System, therefore I stay with this:
 - [x] Jedes Submesh verweist auf genau ein Shaderprogramm. (Damit sind
 	mehrere Texturen / Materialien möglich)
 - [ ] Jedes Submesh verweist auf seinen eigenen Satz an Texturen. (Damit
-  kann dasselbe Programm mit unterschiedlichen Texturen verwendet werden.)
+	kann dasselbe Programm mit unterschiedlichen Texturen verwendet werden.)
 - [ ] ggf. kann jedes Submesh seinen Rendertyp selbst festlegen, um z.B.
 	Gitternetze und gefüllte Flächen parallel zu benutzen, möglicherweise
 	nicht in der ersten Version.
@@ -74,4 +74,6 @@ Right-Hand-Coordinate-System, therefore I stay with this:
 	werden.
 
 ## Bugs
-- Skybox Textur nutzt immer nur den Teil Oben Links der SkyboxTextur.
+- [x] Skybox Textur nutzt immer nur den Teil Oben Links der SkyboxTextur.
+	(Nutzt jetzt das Blender Koordinatensystem, möglicherweise ist das noch
+	falsch)
