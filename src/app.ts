@@ -13,11 +13,18 @@ const camera = Matrix4x4.createLookAtMatrix(eye, at, up);
 console.log(camera.toString("Camera"));
 
 const translation = Matrix4x4.createTranslationMatrix(0, 0, 0);
-const rotation = Matrix4x4.createRotationMatrix(up, 0.0);
+const rotation00 = Matrix4x4.createRotationMatrix(up, 0.0);
+const rotation15 = Matrix4x4.createRotationMatrix(up, Math.PI / 12);
+const rotation30 = Matrix4x4.createRotationMatrix(up, Math.PI / 6);
+const rotation45 = Matrix4x4.createRotationMatrix(up, Math.PI / 4);
+const rotation90 = Matrix4x4.createRotationMatrix(up, Math.PI / 2);
 const scale = Matrix4x4.identity; //Matrix4x4.createScaleMatrix(1.0, 1.0, 1.0);
 
-const transform = Matrix4x4.mul(Matrix4x4.mul(translation, rotation), scale);
-console.log(transform.toString("Transform"));
+const transform00 = Matrix4x4.mul(Matrix4x4.mul(translation, rotation00), scale);
+const transform15 = Matrix4x4.mul(Matrix4x4.mul(translation, rotation15), scale);
+const transform30 = Matrix4x4.mul(Matrix4x4.mul(translation, rotation30), scale);
+const transform45 = Matrix4x4.mul(Matrix4x4.mul(translation, rotation45), scale);
+const transform90 = Matrix4x4.mul(Matrix4x4.mul(translation, rotation90), scale);
 
 const world = Matrix4x4.identity;
 console.log(world.toString("World"));
@@ -34,17 +41,42 @@ console.log(projection.toString("Projection"));
 const worldViewProjection = Matrix4x4.mul(Matrix4x4.mul(world, camera), projection);
 console.log(worldViewProjection.toString("WorldViewProjection"));
 
-const p1 = new Float3(-0.5, -0.5, 0.0);
-console.log(p1.toString("P1"));
+const transform = transform00;
+console.log(transform.toString("Transform"));
+
+const p0 = transform.multiplyPointFast(new Float3(-1.5, -0.5, 0.0));
+const p1 = transform.multiplyPointFast(new Float3(-0.5, -0.5, 0.0));
+
+const p0a = Matrix4x4.mul(worldViewProjection, p0);
+const p0b = worldViewProjection.multiplyPoint(p0);
+const p0c = worldViewProjection.multiplyPointFast(p0);
+const p0d = worldViewProjection.multiplyVector(p0);
+console.log(p0.toString("P0"));
+console.log(p0a.toString("P0               (mul)"));
+console.log(p0b.toString("P0     (multiplyPoint)"));
+console.log(p0c.toString("P0 (multiplyPointFast)"));
+console.log(p0d.toString("P0    (multiplyVector)"));
 
 const p1a = Matrix4x4.mul(worldViewProjection, p1);
 const p1b = worldViewProjection.multiplyPoint(p1);
 const p1c = worldViewProjection.multiplyPointFast(p1);
 const p1d = worldViewProjection.multiplyVector(p1);
+console.log(p1.toString("P1"));
 console.log(p1a.toString("P1               (mul)"));
 console.log(p1b.toString("P1     (multiplyPoint)"));
 console.log(p1c.toString("P1 (multiplyPointFast)"));
 console.log(p1d.toString("P1    (multiplyVector)"));
+
+const addVector = new Float4(0.5, 0.5, 0, 0);
+const scaleVector = new Float4(1920, 1080, 1, 1);
+const p1as = Float4.mul(Float4.add(p1a, addVector), scaleVector);
+const p1bs = Float3.mul(Float3.add(p1b, addVector.xyz), scaleVector.xyz);
+const p1cs = Float3.mul(Float3.add(p1c, addVector.xyz), scaleVector.xyz);
+const p1ds = Float3.mul(Float3.add(p1d, addVector.xyz), scaleVector.xyz);
+console.log(p1as.toString("P1               (mul, scale)"));
+console.log(p1bs.toString("P1     (multiplyPoint, scale)"));
+console.log(p1cs.toString("P1 (multiplyPointFast, scale)"));
+console.log(p1ds.toString("P1    (multiplyVector, scale)"));
 
 // import { createGame } from "./common";
 // import { ApplicationService, IApplicationService } from "./services/applicationService";
