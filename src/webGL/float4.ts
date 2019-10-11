@@ -453,8 +453,8 @@ export class Float4 {
 			|| (Math.abs(this._x - other._x) <= PRECISION && Math.abs(this._y - other._y) <= PRECISION && Math.abs(this._z - other._z) <= PRECISION && Math.abs(this._w - other._w) <= PRECISION);
 	}
 
-	toString() {
-		return `Float4(${format(this._x, 8, 3)}  ${format(this._y, 8, 3)}  ${format(this._z, 8, 3)}  ${format(this._w, 8, 3)})`;
+	toString(name?: string) {
+		return `Float4${name && `: ${name}` || ""}(${format(this._x, 8, 3)}  ${format(this._y, 8, 3)}  ${format(this._z, 8, 3)}  ${format(this._w, 8, 3)})`;
 	}
 	//#endregion
 
@@ -513,3 +513,5 @@ export class Float4 {
 	}
 	//#endregion
 }
+
+(window as any).Float4 = Float4;

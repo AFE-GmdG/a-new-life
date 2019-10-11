@@ -144,3 +144,5 @@ export class Matrix2x2 {
 	}
 	//#endregion
 }
+
+(window as any).Matrix2x2 = Matrix2x2;

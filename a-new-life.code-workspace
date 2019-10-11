@@ -46,8 +46,6 @@
 
 		"grunt.autoDetect": "off",
 		"gulp.autoDetect": "off",
-		"jake.autoDetect": "off",
-
-		"svg.preview.background": "transparent"
+		"jake.autoDetect": "off"
 	}
 }

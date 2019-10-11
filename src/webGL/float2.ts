@@ -125,8 +125,8 @@ export class Float2 {
 			|| (Math.abs(this._x - other._x) <= PRECISION && Math.abs(this._y - other._y) <= PRECISION);
 	}
 
-	toString() {
-		return `Float2(${format(this._x, 8, 3)}  ${format(this._y, 8, 3)})`;
+	toString(name?: string) {
+		return `Float2${name && `: ${name}` || ""}(${format(this._x, 8, 3)}  ${format(this._y, 8, 3)})`;
 	}
 	//#endregion
 
@@ -195,3 +195,5 @@ export class Float2 {
 	}
 	//#endregion
 }
+
+(window as any).Float2 = Float2;

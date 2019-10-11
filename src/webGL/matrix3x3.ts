@@ -228,3 +228,5 @@ export class Matrix3x3 {
 	}
 	//#endregion
 }
+
+(window as any).Matrix3x3 = Matrix3x3;

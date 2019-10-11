@@ -40,9 +40,9 @@ export class Matrix4x4 {
 
 	get elements() {
 		return [this._m00, this._m10, this._m20, this._m30,
-			this._m01, this._m11, this._m21, this._m31,
-			this._m02, this._m12, this._m22, this._m32,
-			this._m03, this._m13, this._m23, this._m33]
+		this._m01, this._m11, this._m21, this._m31,
+		this._m02, this._m12, this._m22, this._m32,
+		this._m03, this._m13, this._m23, this._m33]
 	}
 
 	get inverse() {
@@ -343,8 +343,8 @@ export class Matrix4x4 {
 			);
 	}
 
-	toString() {
-		return `Matrix4x4\n|${format(this._m00, 8, 3)}  ${format(this._m01, 8, 3)}  ${format(this._m02, 8, 3)}  ${format(this._m03, 8, 3)}|\n|${format(this._m10, 8, 3)}  ${format(this._m11, 8, 3)}  ${format(this._m12, 8, 3)}  ${format(this._m13, 8, 3)}|\n|${format(this._m20, 8, 3)}  ${format(this._m21, 8, 3)}  ${format(this._m22, 8, 3)}  ${format(this._m23, 8, 3)}|\n|${format(this._m30, 8, 3)}  ${format(this._m31, 8, 3)}  ${format(this._m32, 8, 3)}  ${format(this._m33, 8, 3)}|`;
+	toString(name?: string) {
+		return `Matrix4x4${name && `: ${name}` || ""}\n|${format(this._m00, 8, 3)}  ${format(this._m01, 8, 3)}  ${format(this._m02, 8, 3)}  ${format(this._m03, 8, 3)}|\n|${format(this._m10, 8, 3)}  ${format(this._m11, 8, 3)}  ${format(this._m12, 8, 3)}  ${format(this._m13, 8, 3)}|\n|${format(this._m20, 8, 3)}  ${format(this._m21, 8, 3)}  ${format(this._m22, 8, 3)}  ${format(this._m23, 8, 3)}|\n|${format(this._m30, 8, 3)}  ${format(this._m31, 8, 3)}  ${format(this._m32, 8, 3)}  ${format(this._m33, 8, 3)}|\n`;
 	}
 	//#endregion
 
@@ -457,3 +457,5 @@ export class Matrix4x4 {
 	}
 	//#endregion
 }
+
+(window as any).Matrix4x4 = Matrix4x4;
