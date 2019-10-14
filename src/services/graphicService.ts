@@ -10,8 +10,8 @@ export interface IGraphicService {
 	readonly meshCache: MeshCache;
 
 	readonly ctxTop?: CanvasRenderingContext2D;
+	readonly ctxFront?: CanvasRenderingContext2D;
 	readonly ctxRight?: CanvasRenderingContext2D;
-	readonly ctxBottom?: CanvasRenderingContext2D;
 
 	cleanup(): void;
 }

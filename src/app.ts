@@ -67,7 +67,7 @@ swPromise.then(applicationService => {
 		}
 	}
 
-	return createGame(canvas, applicationService, onInitializationUpdate);
+	return createGame(canvas, applicationService, onInitializationUpdate, canvasTop, canvasFront, canvasRight);
 }).then(game => {
 	game.run();
 }).catch(reason => {
