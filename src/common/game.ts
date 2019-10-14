@@ -18,7 +18,13 @@ export interface IGame {
 	pause(): void;
 }
 
-export function createGame(canvas: HTMLCanvasElement, applicationService: IApplicationService, initializationUpdateCallback: (percent: number) => void) {
+export function createGame(
+	canvas: HTMLCanvasElement,
+	applicationService: IApplicationService, initializationUpdateCallback: (percent: number) => void,
+	canvasTop?: HTMLCanvasElement,
+	canvasFront?: HTMLCanvasElement,
+	canvasRight?: HTMLCanvasElement
+) {
 	return new Promise<IGame>(async (resolve, reject) => {
 		try {
 			initializationUpdateCallback(0);

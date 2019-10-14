@@ -9,6 +9,10 @@ export interface IGraphicService {
 	readonly shaderCache: ShaderCache;
 	readonly meshCache: MeshCache;
 
+	readonly ctxTop?: CanvasRenderingContext2D;
+	readonly ctxRight?: CanvasRenderingContext2D;
+	readonly ctxBottom?: CanvasRenderingContext2D;
+
 	cleanup(): void;
 }
 
@@ -74,7 +78,17 @@ type BufferInfo = {
 //#endregion
 
 //#region Graphic Service
-export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: string[], textureNames: string[], shaderNames: string[], meshNames: string[], initializationUpdateCallback: (percent: number) => void) {
+export function createGraphicService(
+	canvas: HTMLCanvasElement,
+	skyboxNames: string[],
+	textureNames: string[],
+	shaderNames: string[],
+	meshNames: string[],
+	initializationUpdateCallback: (percent: number) => void,
+	canvasTop?: HTMLCanvasElement,
+	canvasFront?: HTMLCanvasElement,
+	canvasRight?: HTMLCanvasElement
+) {
 	//#region createGraphicService
 	const sum = 1 + skyboxNames.length + textureNames.length + shaderNames.length + meshNames.length;
 	let loaded = 0;
@@ -145,6 +159,9 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 				textureCache: { enumerable: true, configurable: false, writable: false, value: textureCache },
 				shaderCache: { enumerable: true, configurable: false, writable: false, value: shaderCache },
 				meshCache: { enumerable: true, configurable: false, writable: false, value: meshCache },
+				ctxTop: { enumerable: true, configurable: false, writable: false, value: canvasTop && canvasTop.getContext("2d") || undefined },
+				ctxFront: { enumerable: true, configurable: false, writable: false, value: canvasFront && canvasFront.getContext("2d") || undefined },
+				ctxRight: { enumerable: true, configurable: false, writable: false, value: canvasRight && canvasRight.getContext("2d") || undefined },
 
 				cleanup: { enumerable: true, configurable: false, writable: false, value: () => cleanup(gl) }
 			});
@@ -513,6 +530,7 @@ export function createGraphicService(canvas: HTMLCanvasElement, skyboxNames: str
 	}
 
 	function cleanup(gl: WebGL2RenderingContext) {
+		cleanupMeshCache();
 		cleanupSkyboxCache();
 		cleanupTextureCache();
 		cleanupShaderCache(gl);
