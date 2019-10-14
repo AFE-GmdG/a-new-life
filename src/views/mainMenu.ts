@@ -1,4 +1,5 @@
 import { IGameService, View } from "../services/gameService";
+import { Camera } from "../common/camera";
 import { Float3 } from "../webGL/float3";
 import { Matrix4x4 } from "../webGL/matrix4x4";
 
@@ -15,7 +16,7 @@ export function createMainMenu(gameService: IGameService) {
 	let cameraPos = new Float3(0, -10, 3.5);
 	let cameraLookAt = new Float3(0, 0, 3.5);
 	let cameraUp = new Float3(0, 0, 1);
-	let camera: Matrix4x4;
+	const camera = new Camera(graphicService, cameraPos, cameraLookAt, cameraUp);
 	const fInstance = fMesh.createInstance(Matrix4x4.identity, true);
 
 	inputService.keyboardState.addMapping("Escape");
@@ -40,7 +41,7 @@ export function createMainMenu(gameService: IGameService) {
 		}
 
 		const { x: mx, y: my } = inputService.mouseState.relativePos;
-		camera = Matrix4x4.createLookAtMatrix(Float3.add(cameraPos, new Float3(mx || 0, 0, my || 0)), cameraLookAt, cameraUp);
+		// camera = Matrix4x4.createLookAtMatrix(Float3.add(cameraPos, new Float3(mx || 0, 0, my || 0)), cameraLookAt, cameraUp);
 		fInstance.updateTransformMatrix(Matrix4x4.createRotationMatrix(new Float3(0, 0, 1), totalTime * 0.001));
 		fInstance.updateUniforms((instance, uniformInfo, buffer) => {
 			const float32Array = buffer as Float32Array;
@@ -59,7 +60,7 @@ export function createMainMenu(gameService: IGameService) {
 			return;
 		}
 
-		fInstance.render(camera);
+		fInstance.render(camera.matrix);
 	}
 
 	function onResize(newWidth: number, newHeight: number) {

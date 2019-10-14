@@ -1,4 +1,4 @@
-import { assertNever, orThrow } from "../common";
+import { orThrow } from "../common";
 import { IGraphicService } from "../services/graphicService";
 import { Matrix4x4 } from "../webGL/matrix4x4";
 
