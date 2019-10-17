@@ -113,10 +113,10 @@ class InputService implements IInputService {
 	};
 
 	private handleMouseMove = (event: MouseEvent) => {
-		const { clientX, clientY, buttons, currentTarget } = event;
+		const { offsetX, offsetY, buttons, currentTarget } = event;
 		const { clientWidth, clientHeight } = (currentTarget as HTMLCanvasElement);
-		this.absoluteMousePos = { x: clientX, y: clientY };
-		this.relativeMousePos = { x: ((clientX / clientWidth) - 0.5) * (clientWidth / clientHeight), y: 0.5 - (clientY / clientHeight) };
+		this.absoluteMousePos = { x: offsetX, y: offsetY };
+		this.relativeMousePos = { x: ((offsetX / clientWidth) - 0.5) * (clientWidth / clientHeight), y: 0.5 - (offsetY / clientHeight) };
 		this.pressedMouseButtons = buttons;
 	};
 

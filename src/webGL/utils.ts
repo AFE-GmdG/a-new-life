@@ -104,3 +104,5 @@ export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement, multiplier:
 export const PRECISION = 1e-6;
 export const DEG2RAD = 0.017453292519943295;
 export const RAD2DEG = 57.29577951308232;
+export const COS_ONE_OVER_TWO = 0.877582561890372716;
+export const PI_OVER_TWO = 1.5707963267948966;

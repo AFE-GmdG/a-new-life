@@ -47,5 +47,13 @@ export class Camera {
 		}
 	}
 
+	debugRender() {
+		const { ctxTop, ctxFront, ctxRight } = this.graphicService;
+		if (!ctxTop || !ctxFront || !ctxRight) {
+			return;
+		}
+
+
+	}
 }
 //#endregion
