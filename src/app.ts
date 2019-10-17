@@ -1,14 +1,15 @@
 import { Float3, Quaternion, PI_OVER_TWO } from "./webGL";
 
-const axis = new Float3(-1, 0, 1).normalized
+const axis = new Float3(-1, -0.2, 1).normalized
 console.log(axis.toString("Axis"));
 
 const q = new Quaternion(axis, 0.35);
 console.log(q.toString("TestQuat"));
-console.log(q.axis().toString());
-console.log(q.angle().toString());
+console.log(q.axis.toString());
+console.log(q.angle.toString());
 
-
+console.log(q.inversed.toString("Inversed"));
+console.log(q.conjugated.toString("Conjugated"));
 
 
 
