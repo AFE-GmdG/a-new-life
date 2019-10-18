@@ -1,8 +1,4 @@
-import { clamp, format, PRECISION } from "./utils";
-
-import { Float3 } from "./float3";
-import { Float4 } from "./float4";
-import { Matrix3x3 } from "./matrix3x3";
+import { Float3, Float4, Matrix3x3, Quaternion, clamp, format, PRECISION } from ".";
 
 export class Matrix4x4 {
 	//#region Fields
@@ -38,11 +34,18 @@ export class Matrix4x4 {
 			- this._m03 * this.getSubmatrix(0, 3).determinant);
 	}
 
-	get elements() {
+	get elements(): [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number] {
 		return [this._m00, this._m10, this._m20, this._m30,
 		this._m01, this._m11, this._m21, this._m31,
 		this._m02, this._m12, this._m22, this._m32,
 		this._m03, this._m13, this._m23, this._m33]
+	}
+
+	set elements(value: [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]) {
+		this._m00 = value[0]; this._m10 = value[1]; this._m20 = value[2]; this._m30 = value[3];
+		this._m01 = value[4]; this._m11 = value[5]; this._m21 = value[6]; this._m31 = value[7];
+		this._m02 = value[8]; this._m12 = value[9]; this._m22 = value[10]; this._m32 = value[11];
+		this._m03 = value[12]; this._m13 = value[13]; this._m23 = value[14]; this._m33 = value[15];
 	}
 
 	get inverse() {
@@ -421,16 +424,60 @@ export class Matrix4x4 {
 			new Float4(tx, ty, tz, 1));
 	}
 
-	static createRotationMatrix(axis: Float3, angle: number) {
-		const { x, y, z } = axis.normalized;
-		const sin = Math.sin(angle);
-		const cos = Math.cos(angle);
+	/**
+	 * Creates a 4x4 rotation matrix with given quaternion.
+	 * The quaternion should be normalized.
+	 * You can put an output matrix to avoid garbage collection of temporary fields.
+	 * @param quaternion The rotation quaternion.
+	 * @param outMatrix Optional output matrix to write the result to.
+	 */
+	static createRotationMatrix(quaternion: Quaternion, outMatrix?: Matrix4x4): Matrix4x4;
+	/**
+	 * Creates a 4x4 rotation matrix with given axis angle rotation.
+	 * The axis should be normalized.
+	 * You can put an output matrix to avoid garbage collection of temporary fields.
+	 * @param axis The rotation axis.
+	 * @param angle The rotation angle.
+	 * @param outMatrix Optional output matrix to write the result to.
+	 */
+	static createRotationMatrix(axis: Float3, angle: number, outMatrix?: Matrix4x4): Matrix4x4;
+	static createRotationMatrix(axis: Float3 | Quaternion, angle?: number | Matrix4x4, outMatrix?: Matrix4x4) {
+		if (axis instanceof Quaternion) {
+			const { x, y, z, w } = axis;
+			const n = 2.0 / (x * x + y * y + z * z + w * w);
 
-		return new Matrix4x4(
-			new Float4(cos + x * x * (1 - cos), y * x * (1 - cos) + z * sin, z * x * (1 - cos) - y * sin, 0),
-			new Float4(x * y * (1 - cos) - z * sin, cos + y * y * (1 - cos), z * y * (1 - cos) + x * sin, 0),
-			new Float4(x * z * (1 - cos) + y * sin, y * z * (1 - cos) - x * sin, cos + z * z * (1 - cos), 0),
-			new Float4(0, 0, 0, 1));
+			if (angle instanceof Matrix4x4) {
+				outMatrix = angle;
+			} else {
+				outMatrix = new Matrix4x4();
+			}
+
+			// Eine von den beiden Matrizen ist transponiert - nur welche?
+			outMatrix.elements = [
+				1 - n * y * y - n * z * z, n * x * y + n * z * w, n * x * z - n * y * w, 0,
+				n * x * y - n * z * w, 1 - n * x * x - n * z * z, n * y * z + n * x * w, 0,
+				n * x * z + n * y * w, n * y * z - n * x * w, 1 - n * x * x - n * y * y, 0,
+				0,0,0,1
+			];
+		} else {
+			const { x, y, z } = axis.normalized;
+			const sin = Math.sin(angle as number);
+			const cos = Math.cos(angle as number);
+
+			if (!outMatrix) {
+				outMatrix = new Matrix4x4();
+			}
+
+			// Eine von den beiden Matrizen ist transponiert - nur welche?
+			outMatrix.elements = [
+				cos + x * x * (1 - cos), x * y * (1 - cos) - z * sin, x * z * (1 - cos) + y * sin, 0,
+				y * x * (1 - cos) + z * sin, cos + y * y * (1 - cos), y * z * (1 - cos) - x * sin, 0,
+				z * x * (1 - cos) - y * sin, z * y * (1 - cos) + x * sin, cos + z * z * (1 - cos), 0,
+				0, 0, 0, 1
+			];
+		}
+
+		return outMatrix;
 	}
 
 	static createScreenSpaceTransformMatrix(width: number, height: number) {

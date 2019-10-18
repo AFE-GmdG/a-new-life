@@ -1,7 +1,15 @@
 import { GameObject } from ".";
 import { Float3, Matrix4x4, Quaternion } from "../webGL";
 
+enum MatrixState {
+	Invalid,
+	LocalToWorldMatrix,
+	WorldToLocalMatrix
+}
+
 export class Transform {
+	private readonly _tmpMatrix: Matrix4x4;
+	private _tmpMatrixState: MatrixState;
 	private readonly _localPosition: Float3;
 	private readonly _localRotation: Quaternion;
 	private readonly _localScale: Float3;
@@ -16,6 +24,7 @@ export class Transform {
 		return new Float3(parentX + localX, parentY + localY, parentZ + localZ);
 	}
 	set position(value: Float3) {
+		this._tmpMatrixState = MatrixState.Invalid;
 		if (!this.parent) {
 			this._localPosition.xyz = value;
 		} else {
@@ -26,9 +35,26 @@ export class Transform {
 	}
 
 	get localPosition(): Float3 { return this._localPosition; }
-	set localPosition(value: Float3) { this._localPosition.xyz = value; }
+	set localPosition(value: Float3) {
+		this._tmpMatrixState = MatrixState.Invalid;
+		this._localPosition.xyz = value;
+	}
+
+	get localRotation(): Quaternion { return this._localRotation; }
+	set localRotation(value: Quaternion) {
+		this._tmpMatrixState = MatrixState.Invalid;
+		this._localRotation.elements = value.elements;
+	}
+
+	get localScale(): Float3 { return this._localScale; }
+	set localScale(value: Float3) {
+		this._tmpMatrixState = MatrixState.Invalid;
+		this._localScale.xyz = value;
+	}
 
 	constructor() {
+		this._tmpMatrix = new Matrix4x4();
+		this._tmpMatrixState = MatrixState.Invalid;
 		this._localPosition = new Float3();
 		this._localRotation = new Quaternion();
 		this._localScale = new Float3();
@@ -68,6 +94,20 @@ export class Transform {
 			// rotation
 			this.position = this.localPosition;
 		}
+	}
+
+	localToWorldMatrix(outMatrix: Matrix4x4 = new Matrix4x4()): Matrix4x4 {
+		if (this._tmpMatrixState !== MatrixState.LocalToWorldMatrix) {
+			if (parent) {
+
+			} else {
+
+			}
+
+			this._tmpMatrixState = MatrixState.LocalToWorldMatrix;
+		}
+		outMatrix.elements = this._tmpMatrix.elements;
+		return outMatrix;
 	}
 
 };

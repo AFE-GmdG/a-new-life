@@ -1,4 +1,4 @@
-import { Float3, Quaternion, PI_OVER_TWO } from "./webGL";
+import { Float3, Matrix4x4, Quaternion, PI_OVER_TWO } from "./webGL";
 import { GameObject, Transform } from "./common";
 
 const empty = new GameObject("empty");
@@ -8,7 +8,7 @@ const fObject = new GameObject("f");
 fObject.transform.localPosition = new Float3(1, 0, 0);
 fObject.transform.setParent(empty.transform, false);
 
-// empty.transform.localRotation = new Quaternion(new Float3(0, 0, 1), PI_OVER_TWO);
+empty.transform.localRotation = new Quaternion(new Float3(0, 0, 1), PI_OVER_TWO);
 
 console.log(fObject.transform.position.toString("fObject WorldPosition"));
 
@@ -16,6 +16,15 @@ fObject.transform.position = new Float3(-4, 3, 1);
 console.log(fObject.transform.localPosition.toString("fObject LocalPosition"));
 console.log(fObject.transform.position.toString("fObject WorldPosition"));
 
+const out = new Matrix4x4();
+const axis = new Float3(0.1, 0.5, -0.3).normalized;
+console.log(axis.toString("Rotation Axis"));
+Matrix4x4.createRotationMatrix(axis, PI_OVER_TWO, out);
+console.log(out.toString("Axis-Angle-Rotation-Matrix"));
+const q = new Quaternion(axis, PI_OVER_TWO);
+console.log(q.toString("Axis-Angle-Quaternion"));
+Matrix4x4.createRotationMatrix(q, out);
+console.log(out.toString("Quaternion-Rotation-Matrix"));
 
 // import { createGame } from "./common";
 // import { ApplicationService, IApplicationService } from "./services/applicationService";
