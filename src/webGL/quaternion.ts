@@ -11,6 +11,9 @@ export class Quaternion {
 	get z() { return this._elements[2]; } set z(value: number) { this._elements[2] = value; }
 	get w() { return this._elements[3]; } set w(value: number) { this._elements[3] = value; }
 
+	get elements(): [number, number, number, number] { return Array.from(this._elements) as [number, number, number, number]; }
+	set elements(value: [number, number, number, number]) { this._elements.set(value); }
+
 	/** Returns the quaternion rotation angle. */
 	get angle() {
 		if (Math.abs(this._elements[3]) > COS_ONE_OVER_TWO) {

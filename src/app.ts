@@ -1,22 +1,20 @@
 import { Float3, Quaternion, PI_OVER_TWO } from "./webGL";
+import { GameObject, Transform } from "./common";
 
-const axis = new Float3(-1, -0.2, 1).normalized
-console.log(axis.toString("Axis"));
+const empty = new GameObject("empty");
+empty.transform.localPosition = new Float3(1, 0, 0);
 
-const q = new Quaternion(axis, 0.35);
-console.log(q.toString("TestQuat"));
-console.log(q.axis.toString());
-console.log(q.angle.toString());
+const fObject = new GameObject("f");
+fObject.transform.localPosition = new Float3(1, 0, 0);
+fObject.transform.setParent(empty.transform, false);
 
-console.log(q.inversed.toString("Inversed"));
-console.log(q.conjugated.toString("Conjugated"));
+// empty.transform.localRotation = new Quaternion(new Float3(0, 0, 1), PI_OVER_TWO);
 
+console.log(fObject.transform.position.toString("fObject WorldPosition"));
 
-
-
-
-
-
+fObject.transform.position = new Float3(-4, 3, 1);
+console.log(fObject.transform.localPosition.toString("fObject LocalPosition"));
+console.log(fObject.transform.position.toString("fObject WorldPosition"));
 
 
 // import { createGame } from "./common";
