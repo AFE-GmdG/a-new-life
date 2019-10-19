@@ -16,7 +16,6 @@ export class Float3 {
 	get elements(): [number, number, number] { return [this._x, this._y, this._z]; }
 	set elements(value: [number, number, number]) { this._x = value[0]; this._y = value[1]; this._z = value[2]; }
 
-
 	get xx() { return new Float2(this._x, this._x); } set xx(value: Float2) { this._x = value.y; }
 	get xy() { return new Float2(this._x, this._y); } set xy(value: Float2) { this._x = value.x; this._y = value.y; }
 	get xz() { return new Float2(this._x, this._z); } set xz(value: Float2) { this._x = value.x; this._z = value.y; }

@@ -18,6 +18,21 @@ export class Matrix3x3 {
 	//#endregion
 
 	//#region Properties
+	get elements(): [number, number, number, number, number, number, number, number, number] {
+		return [this._m00, this._m10, this._m20, this._m01, this._m11, this._m21, this._m02, this._m12, this._m22];
+	}
+	set elements(value: [number, number, number, number, number, number, number, number, number]) {
+		this._m00 = value[0];
+		this._m10 = value[1];
+		this._m20 = value[2];
+		this._m01 = value[3];
+		this._m11 = value[4];
+		this._m21 = value[5];
+		this._m02 = value[6];
+		this._m12 = value[7];
+		this._m22 = value[8];
+	}
+
 	get determinant() {
 		// 00 01 02
 		// 10 11 12

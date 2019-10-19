@@ -1,30 +1,23 @@
 import { Float3, Matrix4x4, Quaternion, PI_OVER_TWO } from "./webGL";
-import { GameObject, Transform } from "./common";
 
-const empty = new GameObject("empty");
-empty.transform.localPosition = new Float3(1, 0, 0);
-
-const fObject = new GameObject("f");
-fObject.transform.localPosition = new Float3(1, 0, 0);
-fObject.transform.setParent(empty.transform, false);
-
-empty.transform.localRotation = new Quaternion(new Float3(0, 0, 1), PI_OVER_TWO);
-
-console.log(fObject.transform.position.toString("fObject WorldPosition"));
-
-fObject.transform.position = new Float3(-4, 3, 1);
-console.log(fObject.transform.localPosition.toString("fObject LocalPosition"));
-console.log(fObject.transform.position.toString("fObject WorldPosition"));
-
+const axis = new Float3(0.0, 0.1, 1.0).normalized;
+const m1 = Matrix4x4.createRotationMatrix(new Quaternion(axis, PI_OVER_TWO));
+const m2 = Matrix4x4.createTranslationMatrix(0.3, 0.2, -0.5);
 const out = new Matrix4x4();
-const axis = new Float3(0.1, 0.5, -0.3).normalized;
-console.log(axis.toString("Rotation Axis"));
-Matrix4x4.createRotationMatrix(axis, PI_OVER_TWO, out);
-console.log(out.toString("Axis-Angle-Rotation-Matrix"));
-const q = new Quaternion(axis, PI_OVER_TWO);
-console.log(q.toString("Axis-Angle-Quaternion"));
-Matrix4x4.createRotationMatrix(q, out);
-console.log(out.toString("Quaternion-Rotation-Matrix"));
+
+console.log(Matrix4x4.mul(m1, m2, out).toString("mul"));
+
+performance.mark("1");
+for (let i = 0; i < 10000000; ++i) {
+	Matrix4x4.mul(m1, m2, out);
+}
+performance.mark("2");
+
+performance.measure("1-2", "1", "2");
+console.log(performance.getEntriesByType("measure"));
+performance.clearMarks();
+performance.clearMeasures();
+
 
 // import { createGame } from "./common";
 // import { ApplicationService, IApplicationService } from "./services/applicationService";
