@@ -95,7 +95,7 @@ module.exports = (env) => [{
 			minSize: 0,
 			cacheGroups: {
 				named: {
-					test: /[\\/]node_modules[\\/]|meshes[\\/]|shader[\\/]|textures[\\/]|\.wm$/,
+					test: /[\\/]node_modules[\\/]|meshes[\\/]|shader[\\/]|textures[\\/]/,
 					name(module) {
 						if (module.context.match(/src[\\/]meshes/)) {
 							return "meshes";
@@ -105,9 +105,6 @@ module.exports = (env) => [{
 						}
 						if (module.context.match(/src[\\/]textures/)) {
 							return "textures";
-						}
-						if (module.request.match(/\.wm$/)) {
-							return "wasm";
 						}
 						return "vendor";
 					}
