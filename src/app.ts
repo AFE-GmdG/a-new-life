@@ -1,4 +1,5 @@
 import { Float3, Matrix4x4, Quaternion, PI_OVER_TWO } from "./webGL";
+import { bootstrapper } from "./webGL/math.wasm";
 
 const axis = new Float3(0.0, 0.1, 1.0).normalized;
 const m1 = Matrix4x4.createRotationMatrix(new Quaternion(axis, PI_OVER_TWO));
@@ -13,11 +14,22 @@ for (let i = 0; i < 10000000; ++i) {
 }
 performance.mark("2");
 
-performance.measure("1-2", "1", "2");
-console.log(performance.getEntriesByType("measure"));
-performance.clearMarks();
-performance.clearMeasures();
+bootstrapper().then(wasmObj => {
+	console.log(wasmObj.m44m44mul(m1, m2, out).toString("m44m44mul"));
 
+	performance.mark("3");
+	for (let i = 0; i < 10000000; ++i) {
+		wasmObj.m44m44mul(m1, m2, out);
+	}
+	performance.mark("4");
+
+	performance.measure("1-2", "1", "2");
+	performance.measure("3-4", "3", "4");
+	console.log(performance.getEntriesByType("measure"));
+	performance.clearMarks();
+	performance.clearMeasures();
+
+});
 
 // import { createGame } from "./common";
 // import { ApplicationService, IApplicationService } from "./services/applicationService";

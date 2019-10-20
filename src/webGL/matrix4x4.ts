@@ -11,7 +11,7 @@ export class Matrix4x4 {
 	//#region Fields
 
 	// Order: 00, 10, 20, 30, 01, 11, 21, 31, 02, 12, 22, 32, 03, 13, 23, 33.
-	private readonly _: Float32Array;
+	public readonly _: Float32Array;
 	//#endregion
 
 	//#region Properties

@@ -1,6 +1,16 @@
 {
 	"version": "0.2.0",
-	"configurations": [{
+	"configurations": [
+	{
+		"type": "node",
+		"request": "launch",
+		"name": "Debug wat-loader",
+		"cwd": "${workspaceFolder}",
+		"runtimeExecutable": "npm",
+		"runtimeArgs": ["run-script", "debug-wat-loader"],
+		"port": 9229
+	},
+	{
 		"type": "chrome",
 		"request": "launch",
 		"name": "Start Webpack-Dev-Server",
