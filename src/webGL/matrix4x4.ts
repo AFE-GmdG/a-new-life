@@ -105,14 +105,24 @@ export class Matrix4x4 {
 	 */
 	static mul(left: Matrix4x4, right: number, outMatrix?: Matrix4x4): Matrix4x4;
 	/**
+	 * Multiplies a 4x4 matrix with a 4d vector.
+	 * @param left The 4x4 matrix.
+	 * @param right The 4d vector.
+	 * @param outVector Optional output vector to write the result to.
+	 */
+	static mul(left: Matrix4x4, right: Float4, outVector?: Float4): Float4;
+	/**
 	 * Multiplies two 4x4 matrices.
 	 * @param left The left 4x4 matrix.
 	 * @param right The right 4x4 matrix.
 	 * @param outMatrix Optional output matrix to write the result to.
 	 */
 	static mul(left: Matrix4x4, right: Matrix4x4, outMatrix?: Matrix4x4): Matrix4x4;
-	static mul(l: Matrix4x4, r: number | Matrix4x4, out: Matrix4x4 = new Matrix4x4()): Matrix4x4 {
+	static mul(l: Matrix4x4, r: number | Float4 | Matrix4x4, out?: Float4 | Matrix4x4) {
 		if (r instanceof Matrix4x4) {
+			if (!out || !(out instanceof Matrix4x4)) {
+				out = new Matrix4x4();
+			}
 			out._[0] = l._[0] * r._[0] + l._[4] * r._[1] + l._[8] * r._[2] + l._[12] * r._[3];
 			out._[1] = l._[1] * r._[0] + l._[5] * r._[1] + l._[9] * r._[2] + l._[13] * r._[3];
 			out._[2] = l._[2] * r._[0] + l._[6] * r._[1] + l._[10] * r._[2] + l._[14] * r._[3];
@@ -129,7 +139,25 @@ export class Matrix4x4 {
 			out._[13] = l._[1] * r._[12] + l._[5] * r._[13] + l._[9] * r._[14] + l._[13] * r._[15];
 			out._[14] = l._[2] * r._[12] + l._[6] * r._[13] + l._[10] * r._[14] + l._[14] * r._[15];
 			out._[15] = l._[3] * r._[12] + l._[7] * r._[13] + l._[11] * r._[14] + l._[15] * r._[15];
+		} else if (r instanceof Float4) {
+			if (!out || !(out instanceof Float4)) {
+				out = new Float4();
+			}
+			// Diese Formel entspricht dem Blender-Verhalten bei Matrix * Vector
+			out.x = l.m00 * r.x + l.m01 * r.y + l.m02 * r.z + l.m03 * r.w;
+			out.y = l.m10 * r.x + l.m11 * r.y + l.m12 * r.z + l.m13 * r.w;
+			out.z = l.m20 * r.x + l.m21 * r.y + l.m22 * r.z + l.m23 * r.w;
+			out.w = l.m30 * r.x + l.m31 * r.y + l.m32 * r.z + l.m33 * r.w;
+
+			// Diese Formel entspricht dem Blender-Verhalten bei Vector * Matrix
+			// out.x = l.m00 * r.x + l.m10 * r.y + l.m20 * r.z + l.m30 * r.w;
+			// out.y = l.m01 * r.x + l.m11 * r.y + l.m21 * r.z + l.m31 * r.w;
+			// out.z = l.m02 * r.x + l.m12 * r.y + l.m22 * r.z + l.m32 * r.w;
+			// out.w = l.m03 * r.x + l.m13 * r.y + l.m23 * r.z + l.m33 * r.w;
 		} else {
+			if (!out || !(out instanceof Matrix4x4)) {
+				out = new Matrix4x4();
+			}
 			out._[0] = l._[0] * r;
 			out._[1] = l._[1] * r;
 			out._[2] = l._[2] * r;
@@ -240,6 +268,135 @@ export class Matrix4x4 {
 			else out.elements = [this.m00, this.m10, this.m20, this.m01, this.m11, this.m21, this.m02, this.m12, this.m22];
 		}
 		return out;
+	}
+
+	decompose(dTranslation: Float3, dRotation?: Quaternion, dScale?: Float3, dSkew?: Float3, dPerspective?: Float4): boolean {
+		// Normalize the matrix.
+		if (Math.abs(this.m33) <= PRECISION) {
+			return false;
+		}
+		const local = Matrix4x4.mul(this, 1 / this.m33);
+		// perspectiveMatrix is used to solve for perspective, but it also provides
+		// an easy way to test for singularity of the upper 3x3 component.
+		const perspective = new Matrix4x4(local);
+		perspective.m30 = 0;
+		perspective.m31 = 0;
+		perspective.m32 = 0;
+		perspective.m33 = 1;
+
+		if (Math.abs(perspective.determinant) <= PRECISION) {
+			return false;
+		}
+
+		if (!dRotation) dRotation = new Quaternion();
+		if (!dScale) dScale = new Float3();
+		if (!dSkew) dSkew = new Float3();
+		if (!dPerspective) dPerspective = new Float4();
+
+		// First, isolate perspective. This is the messiest.
+		if (Math.abs(local.m30) <= PRECISION ||
+			Math.abs(local.m31) <= PRECISION ||
+			Math.abs(local.m32) <= PRECISION) {
+			// rightHandSide is the right hand side of the equation.
+			const rightHandSide = new Float4(local.m30, local.m31, local.m32, local.m33);
+			// Solve the equation by inverting the perspective matrix and multiplying
+			// rightHandSide vector by the inverse.  (This is the easiest way, not
+			// necessarily the best.)
+			const transposedInversePerspective = perspective.inverse.transposed;
+			Matrix4x4.mul(transposedInversePerspective, rightHandSide, dPerspective);
+
+			// Clear the perspective partition.
+			local.m30 = 0;
+			local.m31 = 0;
+			local.m32 = 0;
+			local.m33 = 1;
+
+		} else {
+			// No perspective.
+			dPerspective.elements = [0, 0, 0, 1];
+		}
+
+		// Next take care of translation (easy).
+		dTranslation.elements = [local.m03, local.m13, local.m23];
+
+		// Now get scale and shear.
+		const row0 = local.getRow(0).xyz;
+		const row1 = local.getRow(1).xyz;
+		const row2 = local.getRow(2).xyz;
+
+		// Compute X scale factor and normalize first row.
+		dScale.x = row0.length;
+		// Row[0] = detail::scale(Row[0], static_cast<T>(1));
+		Float3.scale(row0, 1, row0);
+		// Compute XY shear factor and make 2nd row orthogonal to 1st.
+		// Skew.z = dot(Row[0], Row[1]);
+		// Row[1] = detail::combine(Row[1], Row[0], static_cast<T>(1), -Skew.z);
+		dSkew.z = Float3.dot(row0, row1);
+		Float3.linearCombine(row1, row0, 1, -dSkew.z, row1);
+
+		// Now, compute Y scale and normalize 2nd row.
+		// Scale.y = length(Row[1]);
+		dScale.y = row1.length;
+		// Row[1] = detail::scale(Row[1], static_cast<T>(1));
+		Float3.scale(row1, 1, row1);
+		// Skew.z /= Scale.y;
+		dSkew.z /= dScale.y;
+
+		// Compute XZ and YZ shears, orthogonalize 3rd row.
+		// Skew.y = glm::dot(Row[0], Row[2]);
+		dSkew.y = Float3.dot(row0, row2);
+		// Row[2] = detail::combine(Row[2], Row[0], static_cast<T>(1), -Skew.y);
+		Float3.linearCombine(row2, row0, 1, -dSkew.y);
+		// Skew.x = glm::dot(Row[1], Row[2]);
+		dSkew.x = Float3.dot(row1, row2);
+		// Row[2] = detail::combine(Row[2], Row[1], static_cast<T>(1), -Skew.x);
+		Float3.linearCombine(row2, row1, 1, -dSkew.x);
+
+		// Next, get Z scale and normalize 3rd row.
+		// Scale.z = length(Row[2]);
+		dScale.z = row2.length;
+		// Row[2] = detail::scale(Row[2], static_cast<T>(1));
+		Float3.scale(row2, 1, row2);
+		// Skew.y /= Scale.z;
+		dSkew.y /= dScale.z;
+		// Skew.x /= Scale.z;
+		dSkew.x /= dScale.z;
+
+		// At this point, the matrix (in rows[]) is orthonormal.
+		// Check for a coordinate system flip.  If the determinant
+		// is -1, then negate the matrix and the scaling factors.
+		// Pdum3 = cross(Row[1], Row[2]);
+		const dummy = Float3.cross(row1, row2);
+		// if(dot(Row[0], Pdum3) < 0)
+		// {
+		// 	 for(length_t i = 0; i < 3; i++)
+		// 	 {
+		// 	   Scale[i] *= static_cast<T>(-1);
+		//     Row[i] *= static_cast<T>(-1);
+		// 	}
+		// }
+		if (Float3.dot(row0, dummy) < 0) {
+			Float3.mul(dScale, -1, dScale);
+			Float3.mul(row0, -1, row0);
+			Float3.mul(row1, -1, row1);
+			Float3.mul(row2, -1, row2);
+		}
+
+		// Now, get the rotations out, as described in the gem.
+		let root: number;
+		let trace = row0.x + row1.y + row2.z;
+		if (trace > 0) {
+			root = Math.sqrt(trace + 1);
+			dRotation.w = 0.5 * root;
+			root = 0.5 / root;
+			dRotation.x = root * (row1.z - row2.y);
+			dRotation.y = root * (row2.x - row0.z);
+			dRotation.z = root * (row0.y - row1.x);
+		} else {
+			console.log("<=0");
+		}
+
+		return true;
 	}
 
 	equals(other: Matrix4x4) {
@@ -400,6 +557,40 @@ export class Matrix4x4 {
 			];
 		}
 
+		return out;
+	}
+
+	/**
+	 * Creates a 4x4 scale matrix.
+	 * You can put an output matrix to avoid garbage collection of temporary fields.
+	 * @param scale The scale vector
+	 * @param outMatrix Optional output matrix to write the result to.
+	 */
+	static createScaleMatrix(scale: Float3, outMatrix: Matrix4x4): Matrix4x4;
+	/**
+	 * Creates a 4x4 scale matrix with given sx, sy and sz scale factors.
+	 * You can put an output matrix to avoid garbage collection of temporary fields.
+	 * @param sx The scale factor on the x-axis.
+	 * @param sy The scale factor on the y-axis.
+	 * @param sz The scale factor on the z-axis.
+	 * @param outMatrix Optional output matrix to write the result to.
+	 */
+	static createScaleMatrix(sx: number, sy: number, sz: number, outMatrix?: Matrix4x4): Matrix4x4;
+	static createScaleMatrix(sx: number | Float3, sy?: number | Matrix4x4, sz?: number, out?: Matrix4x4) {
+		if (sx instanceof Float3) {
+			out = sy as Matrix4x4 || new Matrix4x4();
+			sy = sx.y;
+			sz = sx.z;
+			sx = sx.x;
+		} else {
+			out = out || new Matrix4x4();
+		}
+		out.elements = [
+			sx, 0, 0, 0,
+			0, sy as number, 0, 0,
+			0, 0, sz!, 0,
+			0, 0, 0, 1
+		];
 		return out;
 	}
 

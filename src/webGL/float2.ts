@@ -195,5 +195,3 @@ export class Float2 {
 	}
 	//#endregion
 }
-
-(window as any).Float2 = Float2;

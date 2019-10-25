@@ -515,5 +515,3 @@ export class Float4 {
 	}
 	//#endregion
 }
-
-(window as any).Float4 = Float4;

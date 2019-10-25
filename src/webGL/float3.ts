@@ -174,40 +174,64 @@ export class Float3 {
 	//#endregion
 
 	//#region Operators
-	static add(left: Float3, right: number): Float3;
-	static add(left: Float3, right: Float3): Float3;
-	static add(left: Float3, right: number | Float3) {
+	static add(left: Float3, right: number, out?: Float3): Float3;
+	static add(left: Float3, right: Float3, out?: Float3): Float3;
+	static add(left: Float3, right: number | Float3, out = new Float3()) {
 		if (right instanceof Float3) {
-			return new Float3(left._x + right._x, left._y + right._y, left._z + right._z);
+			out.x = left._x + right._x;
+			out.y = left._y + right._y;
+			out.z = left._z + right._z;
+		} else {
+			out.x = left._x + right;
+			out.y = left._y + right;
+			out.z = left._z + right;
 		}
-		return new Float3(left._x + right, left._y + right, left._z + right);
+		return out;
 	}
 
-	static sub(left: Float3, right: number): Float3;
-	static sub(left: Float3, right: Float3): Float3;
-	static sub(left: Float3, right: number | Float3) {
+	static sub(left: Float3, right: number, out?: Float3): Float3;
+	static sub(left: Float3, right: Float3, out?: Float3): Float3;
+	static sub(left: Float3, right: number | Float3, out = new Float3()) {
 		if (right instanceof Float3) {
-			return new Float3(left._x - right._x, left._y - right._y, left._z - right._z);
+			out.x = left._x - right._x;
+			out.y = left._y - right._y;
+			out.z = left._z - right._z;
+		} else {
+			out.x = left._x - right;
+			out.y = left._y - right;
+			out.z = left._z - right;
 		}
-		return new Float3(left._x - right, left._y - right, left._z - right);
+		return out;
 	}
 
-	static mul(left: Float3, right: number): Float3;
-	static mul(left: Float3, right: Float3): Float3;
-	static mul(left: Float3, right: number | Float3) {
+	static mul(left: Float3, right: number, out?: Float3): Float3;
+	static mul(left: Float3, right: Float3, out?: Float3): Float3;
+	static mul(left: Float3, right: number | Float3, out = new Float3()) {
 		if (right instanceof Float3) {
-			return new Float3(left._x * right._x, left._y * right._y, left._z * right._z);
+			out.x = left._x * right._x;
+			out.y = left._y * right._y;
+			out.z = left._z * right._z;
+		} else {
+			out.x = left._x * right;
+			out.y = left._y * right;
+			out.z = left._z * right;
 		}
-		return new Float3(left._x * right, left._y * right, left._z * right);
+		return out;
 	}
 
-	static div(left: Float3, right: number): Float3;
-	static div(left: Float3, right: Float3): Float3;
-	static div(left: Float3, right: number | Float3) {
+	static div(left: Float3, right: number, out?: Float3): Float3;
+	static div(left: Float3, right: Float3, out?: Float3): Float3;
+	static div(left: Float3, right: number | Float3, out = new Float3()) {
 		if (right instanceof Float3) {
-			return new Float3(left._x / right._x, left._y / right._y, left._z / right._z);
+			out.x = left._x / right._x;
+			out.y = left._y / right._y;
+			out.z = left._z / right._z;
+		} else {
+			out.x = left._x / right;
+			out.y = left._y / right;
+			out.z = left._z / right;
 		}
-		return new Float3(left._x / right, left._y / right, left._z / right);
+		return out;
 	}
 
 	static mod(left: Float3, right: number): Float3;
@@ -266,6 +290,13 @@ export class Float3 {
 		return new Float3(a._x + (b._x - a._x) * t, a._y + (b._y - a._y) * t, a._z + (b._z - a._z) * t);
 	}
 
+	static linearCombine(a: Float3, b: Float3, ascl: number, bscl: number, out = new Float3()) {
+		out.x = a._x * ascl + b._x * bscl;
+		out.y = a._y * ascl + b._y * bscl;
+		out.z = a._z * ascl + b._z * bscl;
+		return out;
+	}
+
 	static magnitude(v: Float3) {
 		return Math.hypot(v._x, v._y, v._z);
 	}
@@ -294,10 +325,16 @@ export class Float3 {
 		throw new Error("Not Implemented.");
 	}
 
+	static scale(v: Float3, factor: number, out = new Float3()) {
+		const f = factor / Float3.magnitude(v);
+		out.x = v.x * f;
+		out.y = v.y * f;
+		out.z = v.z * f;
+		return out;
+	}
+
 	static sqrMagnitude(v: Float3) {
 		return Float3.dot(v, v);
 	}
 	//#endregion
 }
-
-(window as any).Float3 = Float3;
