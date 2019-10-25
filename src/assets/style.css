@@ -33,9 +33,6 @@ h1 {
 
 #app {
 	height: 100%;
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	grid-template-rows: 1fr 1fr;
 }
 
 #main-canvas {
@@ -46,92 +43,4 @@ h1 {
 	width: 100%;
 	height: 100%;
 	image-rendering: pixelated;
-	grid-column: 2/3;
-	grid-row: 1/2;
-}
-
-#canvas-top {
-	display: block;
-	margin: 0;
-	padding: 0;
-	border: 0 none;
-	width: 100%;
-	height: 100%;
-	image-rendering: pixelated;
-	grid-column: 1/2;
-	grid-row: 1/2;
-}
-
-#canvas-front {
-	display: block;
-	margin: 0;
-	padding: 0;
-	border: 0 none;
-	width: 100%;
-	height: 100%;
-	image-rendering: pixelated;
-	grid-column: 1/2;
-	grid-row: 2/3;
-}
-
-#canvas-right {
-	display: block;
-	margin: 0;
-	padding: 0;
-	border: 0 none;
-	width: 100%;
-	height: 100%;
-	image-rendering: pixelated;
-	grid-column: 2/3;
-	grid-row: 2/3;
-}
-
-#label-top {
-	display: inline;
-	margin: 4px 8px;
-	font-weight: bold;
-	align-self: start;
-	justify-self: start;
-	grid-column: 1/2;
-	grid-row: 1/2;
-}
-
-#label-front {
-	display: inline;
-	margin: 4px 8px;
-	font-weight: bold;
-	align-self: start;
-	justify-self: start;
-	grid-column: 1/2;
-	grid-row: 2/3;
-}
-
-#label-right {
-	display: inline;
-	margin: 4px 8px;
-	font-weight: bold;
-	align-self: start;
-	justify-self: start;
-	grid-column: 2/3;
-	grid-row: 2/3;
-}
-
-#main-progress {
-	position: absolute;
-	top: 80vh;
-	right: 20vw;
-	left: 20vw;
-	max-width: 400px;
-	text-align: center;
-	display: none;
-	margin: auto;
-	border: 1px solid hsl(30, 50%, 10%);
-	border-radius: 3px;
-	color: hsl(210, 50%, 95%);
-	background-image: linear-gradient(to bottom, hsl(30, 60%, 50%), hsl(30, 50%, 10%));
-	background-repeat: no-repeat;
-}
-
-#main-progress.visible {
-	display: block;
 }

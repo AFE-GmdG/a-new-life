@@ -31,14 +31,14 @@ module.exports = (env) => [{
 
 	entry: {
 		"app": [
-			"./app.ts"
+			"./app.tsx"
 		]
 	},
 
 	devtool: env === "dist" ? false : "source-map",
 
 	resolve: {
-		extensions: [".ts", ".js"],
+		extensions: [".tsx", ".ts", ".js"],
 		alias: {
 			"@microsoft/typescript-etw": "./_does_not_exist_"
 		}
@@ -53,7 +53,7 @@ module.exports = (env) => [{
 
 	module: {
 		rules: [{
-			test: /\.ts$/,
+			test: /\.tsx?$/,
 			exclude: /node_modules/,
 			use: [{
 				loader: "ts-loader"

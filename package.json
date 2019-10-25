@@ -10,8 +10,7 @@
     "prebuild:dev": "rimraf dist",
     "build:dev": "webpack --env debug",
     "prebuild:sw": "rimraf lib/worker/serviceworker.*",
-    "build:sw": "webpack --env debug --config webpack.sw.config.js && webpack --env release --config webpack.sw.config.js",
-    "debug-wat-loader": "node --nolazy --inspect-brk=9229 ./lib/wat-loader/index.js"
+    "build:sw": "webpack --env debug --config webpack.sw.config.js && webpack --env release --config webpack.sw.config.js"
   },
   "repository": {
     "type": "none"
@@ -19,22 +18,27 @@
   "author": "Andreas Friedel",
   "license": "MIT",
   "devDependencies": {
+    "@easm/core": "0.2.5",
+    "@easm/react": "0.2.3",
+    "@easm/ts-plugin-transform": "0.2.5",
     "@types/lz-string": "1.3.33",
-    "@types/uuid": "3.4.5",
+    "@types/react": "16.9.11",
+    "@types/react-dom": "16.9.3",
     "copy-webpack-plugin": "5.0.4",
     "file-loader": "4.2.0",
     "html-webpack-plugin": "3.2.0",
-    "jsonc-parser": "2.1.1",
+    "jsonc-parser": "2.2.0",
     "lz-string": "1.4.4",
     "raw-loader": "3.1.0",
-    "rimraf": "3.0.0",
-    "terser-webpack-plugin": "2.1.3",
-    "ts-loader": "6.2.0",
+    "react": "16.11.0",
+    "react-dom": "16.11.0",
+    "rimraf": "2.7.1",
+    "terser-webpack-plugin": "2.2.1",
+    "ts-loader": "6.2.1",
     "typescript": "3.6.4",
     "url-loader": "2.2.0",
-    "uuid": "3.3.3",
     "webpack": "4.41.2",
     "webpack-cli": "3.3.9",
-    "webpack-dev-server": "3.8.2"
+    "webpack-dev-server": "3.9.0"
   }
 }
