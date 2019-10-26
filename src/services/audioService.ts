@@ -1,4 +1,4 @@
-import { delay } from "../common";
+import { delay } from "../common/delay";
 
 export interface IAudioService {
 	cleanup(): void;

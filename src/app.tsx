@@ -1,12 +1,19 @@
-import * as React from "react";
-import * as ReactDOM from "react-dom";
+import React from "react";
+import ReactDOM from "react-dom";
 
-import { createGame } from "./common";
+import { Camera } from "./common/camera";
+import { Scene } from "./common/scene";
+import { ProgressBar } from "./components/progressbar";
 import { ApplicationService, IApplicationService } from "./services/applicationService";
 
 const swPromise: Promise<IApplicationService> = window.navigator.serviceWorker
 	? ApplicationService.create("sw.js")
 	: Promise.reject();
+
+let setProgressCallback: ((progress: number | null) => void) | undefined = undefined;
+const onInitializationUpdate = (progress: number | null) => {
+	setProgressCallback && setProgressCallback(progress);
+};
 
 swPromise.then(applicationService => {
 	// webpack reload
@@ -72,14 +79,31 @@ swPromise.then(applicationService => {
 
 	// return createGame(canvas, applicationService, onInitializationUpdate, canvasTop, canvasFront, canvasRight);
 
-	const App: React.FC = props => {
+	const canvasRef = React.createRef<HTMLCanvasElement>();
+	const App: React.FC = _props => {
+
+		const [progress, setProgress] = React.useState<number | null>(null);
+		setProgressCallback = setProgress;
+
 		return (
-			<canvas id="main-canvas"></canvas>
+			<>
+				<canvas key="main-canvas" id="main-canvas" ref={ canvasRef }></canvas>
+				<ProgressBar key="progress" percent={ progress } />
+			</>
 		);
 	};
 
-	return new Promise<void>(resolve => ReactDOM.render(<App />, document.getElementById("app"), resolve));
-}).then(() => {
+	return new Promise<HTMLCanvasElement>(resolve => ReactDOM.render(<App />, document.getElementById("app"), () => resolve(canvasRef && canvasRef.current || undefined)));
+}).then(canvas => {
+	onInitializationUpdate(0);
+	const scene = new Scene("Scene 01");
+	scene.add(new Camera("Main Camera"));
+
+	for (const c of scene.cameras) {
+		console.log(c);
+	}
+
+	onInitializationUpdate(null);
 }).catch(reason => {
 	const appDiv = document.getElementById("app")!;
 

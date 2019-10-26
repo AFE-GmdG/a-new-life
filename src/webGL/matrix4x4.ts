@@ -1,4 +1,8 @@
-import { Float3, Float4, Matrix3x3, Quaternion, clamp, format, PRECISION } from ".";
+import { clamp, format, PRECISION } from "./utils";
+import { Float3 } from "./float3";
+import { Float4 } from "./float4";
+import { Matrix3x3 } from "./matrix3x3";
+import { Quaternion } from "./quaternion";
 
 /**
  * A 4x4 column based matrix\

@@ -8,8 +8,8 @@
 
 html {
 	height: 100vh;
-	background-color: hsl(210, 50%, 95%);
-	color: hsl(210, 50%, 5%);
+	background-color: hsl(30, 50%, 25%);
+	color: hsl(210, 50%, 95%);
 	user-select: none;
 	-moz-user-select: none;
 }
@@ -43,4 +43,21 @@ h1 {
 	width: 100%;
 	height: 100%;
 	image-rendering: pixelated;
+}
+
+.progress-bar {
+	position: absolute;
+	top: 80vh;
+	right: 20vw;
+	left: 20vw;
+	max-width: 400px;
+	text-align: center;
+	margin: auto;
+	border: 1px solid hsl(30, 50%, 10%);
+	border-radius: 3px;
+	color: hsl(210, 50%, 95%);
+	background-color: hsl(30, 60%, 50%);
+	background-image: linear-gradient(to bottom, hsl(30, 60%, 40%), hsl(30, 50%, 10%));
+	background-repeat: no-repeat;
+	transition: background-size 500ms ease;
 }

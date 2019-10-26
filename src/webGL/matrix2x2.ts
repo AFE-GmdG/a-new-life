@@ -1,5 +1,4 @@
 import { format, PRECISION } from "./utils";
-
 import { Float2 } from "./float2";
 
 export class Matrix2x2 {

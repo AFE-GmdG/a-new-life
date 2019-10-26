@@ -1,5 +1,4 @@
 import { format, PRECISION } from "./utils";
-
 import { Float2 } from "./float2";
 import { Float3 } from "./float3";
 import { Matrix2x2 } from "./matrix2x2";

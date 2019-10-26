@@ -1,4 +1,5 @@
-import { Float3, format, PRECISION, COS_ONE_OVER_TWO } from ".";
+import { format, PRECISION, COS_ONE_OVER_TWO } from "./utils";
+import { Float3 } from "./float3";
 
 export class Quaternion {
 	//#region Fields

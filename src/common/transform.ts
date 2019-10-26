@@ -1,5 +1,7 @@
-import { GameObject } from ".";
-import { Float3, Matrix4x4, Quaternion } from "../webGL";
+import { GameObject } from "./gameObject";
+import { Float3 } from "../webGL/float3";
+import { Matrix4x4 } from "../webGL/matrix4x4";
+import { Quaternion } from "../webGL/quaternion";
 
 enum MatrixState {
 	Invalid,

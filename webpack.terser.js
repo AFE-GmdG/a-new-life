@@ -1,6 +1,6 @@
 module.exports = {
   terserOptions: { // https://github.com/terser-js/terser#minify-options
-    ecma: 7,
+    ecma: 8,
     warnings: false, // false, true, "verbose"
     parse: { // https://github.com/terser-js/terser#parse-options
       bare_returns: true,
@@ -11,7 +11,9 @@ module.exports = {
       drop_console: true,
       drop_debugger: true,
       ecma: 7,
+      keep_classnames: false,
       keep_fargs: false, // set to true, if Function.length is used
+      keep_fnames: false,
       keep_infinity: true,
       passes: 1, // Keep in mind more passes will take more time.
       toplevel: true,
@@ -19,7 +21,7 @@ module.exports = {
       unsafe_math: true,    // optimize numerical expressions like 2 * x * 3 into 6 * x, which may give imprecise floating point results.
       unsafe_methods: false,
       unsafe_proto: true,   // optimize expressions like Array.prototype.slice.call(a) into [].slice.call(a)
-      unsafe_undefined: false
+      unsafe_undefined: true
     },
     mangle: true, // https://github.com/terser-js/terser#mangle-options
     module: false,
@@ -27,6 +29,8 @@ module.exports = {
       beautify: false,
       comments: false, // false, true, "some", regex
       ecma: 7
-    }
+    },
+    toplevel: true,
+    keep_classnames: false
   }
 };

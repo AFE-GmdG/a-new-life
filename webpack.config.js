@@ -8,6 +8,7 @@
 "use strict";
 
 const webpack = require("webpack");
+const easmTransformer = require('@easm/ts-plugin-transform');
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
@@ -56,7 +57,14 @@ module.exports = (env) => [{
 			test: /\.tsx?$/,
 			exclude: /node_modules/,
 			use: [{
-				loader: "ts-loader"
+				loader: "ts-loader",
+				options: {
+					getCustomTransformers: program => ({
+						before: [
+							easmTransformer(program)
+						]
+					})
+				}
 			}]
 		}, {
 			test: /\.vs$|\.fs$/,
@@ -169,15 +177,6 @@ module.exports = (env) => [{
 					NODE_ENV: "'development'",
 					VERSION: JSON.stringify(require("./package.json").version)
 				}
-			// }),
-			// new webpack.SourceMapDevToolPlugin({
-			// 	filename: "[name].js.map",
-			// 	columns: true,
-			// 	noSources: true,
-			// 	sourceRoot: "file:///" + cwd.replace(/\\/g, "/"),
-			// 	moduleFilenameTemplate: (module) => {
-			// 		return path.relative(cwd, module.absoluteResourcePath).replace(/\\/g, "/");
-			// 	}
 			})
 		],
 		new HashAssetsPlugin({

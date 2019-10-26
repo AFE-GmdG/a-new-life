@@ -13,11 +13,11 @@ export function createMainMenu(gameService: IGameService) {
 		return true;
 	});
 
-	const camera = new Camera(
-		graphicService,
-		new Float3(0, -10, 3.5),
-		new Float3(0, 0, 3.5),
-		new Float3(0, 0, 1));
+	// const camera = new Camera(
+	// 	graphicService,
+	// 	new Float3(0, -10, 3.5),
+	// 	new Float3(0, 0, 3.5),
+	// 	new Float3(0, 0, 1));
 
 	// const fInstance = fMesh.createInstance(Matrix4x4.identity, true);
 
@@ -55,8 +55,8 @@ export function createMainMenu(gameService: IGameService) {
 		// 	}
 		// });
 
-		camera.eye.x = mx || 0;
-		camera.eye.y = my || 0;
+		// camera.eye.x = mx || 0;
+		// camera.eye.y = my || 0;
 
 		return true;
 	}

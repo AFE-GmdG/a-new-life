@@ -1,6 +1,7 @@
 import { parse } from "jsonc-parser";
 
-import { Mesh, orThrow } from "../common";
+import { orThrow } from "../common/assert";
+import { Mesh } from "../common/mesh";
 
 export interface IGraphicService {
 	readonly gl: WebGL2RenderingContext;

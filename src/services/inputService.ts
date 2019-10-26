@@ -1,4 +1,4 @@
-import { orThrow, FourBitFlag, FourBitSelect } from "../common";
+import { orThrow } from "../common/assert";
 
 export interface IInputService {
 	readonly keyboardState: KeyboardState;

@@ -1,4 +1,6 @@
-import { Float3, Matrix4x4, Quaternion } from "../webGL";
+import { Float3 } from "../webGL/float3";
+import { Matrix4x4 } from "../webGL/matrix4x4";
+import { Quaternion } from "../webGL/quaternion";
 import { Transform } from "./transform";
 
 //#region GameObject
@@ -10,12 +12,21 @@ export class GameObject {
 
 	constructor();
 	constructor(name: string);
-	constructor(name?: string) {
+	constructor(transform: Transform);
+	constructor(name: string, transform: Transform);
+	constructor(name?: string | Transform, transform?: Transform) {
+		if (name instanceof Transform) {
+			transform = name;
+			name = undefined;
+		}
 		if (name === undefined) {
 			name = `GameObject[${GameObject.maxId++}]`;
 		}
+		if (transform === undefined) {
+			transform = new Transform();
+		}
 		this.name = name;
-		this.transform = new Transform();
+		this.transform = transform;
 	}
 
 }
