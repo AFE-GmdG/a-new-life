@@ -1,4 +1,5 @@
 import { GameObject } from "./gameObject";
+import { PRECISION } from "../webGL/utils";
 import { Float3 } from "../webGL/float3";
 import { Matrix4x4 } from "../webGL/matrix4x4";
 import { Quaternion } from "../webGL/quaternion";
@@ -112,4 +113,21 @@ export class Transform {
 		return outMatrix;
 	}
 
+	localSetPositionLookAt(position: Float3, lookAt: Float3, up: Float3 = new Float3(0, 0, 1)) {
+		debugger;
+		this._localPosition.xyz = position;
+		const forward = new Float3(0, 1, 0);
+		const forwardVector = Float3.sub(lookAt, position);
+		forwardVector.normalize();
+		const rotationAxis = Float3.cross(forward, forwardVector);
+		const dot = Float3.dot(forward, forwardVector);
+		this._localRotation.elements = [
+			rotationAxis.x,
+			rotationAxis.y,
+			rotationAxis.z,
+			dot + 1
+		];
+		this._localRotation.normalize();
+		console.log(this._localRotation);
+	}
 };

@@ -16,11 +16,11 @@ export class Scene {
 		this._activeCamera = value;
 	}
 
-	get cameras() {
+	get cameras(): IterableIterator<Camera> {
 		const instance = this;
 		let nextIndex = 0;
 		return {
-			next: function (): { value: Camera; done: false; } | { value: undefined; done: true; } {
+			next(): IteratorResult<Camera, undefined> {
 				while (nextIndex < instance.gameObjects.length) {
 					const potentialCamera = instance.gameObjects[nextIndex++];
 					if (potentialCamera instanceof Camera) {
@@ -29,7 +29,11 @@ export class Scene {
 				}
 				return { value: undefined, done: true };
 			},
-			[Symbol.iterator]: function () { return this; }
+			return() {
+				// console.log("return was called.");
+				return { value: undefined, done: true };
+			},
+			[Symbol.iterator]() { return this; }
 		}
 	}
 	//#endregion
@@ -47,6 +51,15 @@ export class Scene {
 			throw new Error("gameObject already added.");
 		}
 		this.gameObjects.push(gameObject);
+	}
+
+	setActiveCameraByName(cameraName: string): Camera | undefined {
+		for (const camera of this.cameras) {
+			if (camera.name === cameraName) {
+				return this._activeCamera = camera;
+			}
+		}
+		return undefined;
 	}
 	//#endregion
 }

@@ -5,6 +5,8 @@ import { Camera } from "./common/camera";
 import { Scene } from "./common/scene";
 import { ProgressBar } from "./components/progressbar";
 import { ApplicationService, IApplicationService } from "./services/applicationService";
+import { Float3 } from "./webGL/float3";
+import { resizeCanvasToDisplaySize } from "./webGL/utils";
 
 const swPromise: Promise<IApplicationService> = window.navigator.serviceWorker
 	? ApplicationService.create("sw.js")
@@ -96,12 +98,14 @@ swPromise.then(applicationService => {
 	return new Promise<HTMLCanvasElement>(resolve => ReactDOM.render(<App />, document.getElementById("app"), () => resolve(canvasRef && canvasRef.current || undefined)));
 }).then(canvas => {
 	onInitializationUpdate(0);
+	resizeCanvasToDisplaySize(canvas);
 	const scene = new Scene("Scene 01");
-	scene.add(new Camera("Main Camera"));
-
-	for (const c of scene.cameras) {
-		console.log(c);
-	}
+	const mainCamera = new Camera("Main Camera");
+	const additionalCamera = new Camera("Additional Camera");
+	scene.add(mainCamera);
+	scene.add(additionalCamera);
+	scene.activeCamera = mainCamera;
+	mainCamera.transform.localSetPositionLookAt(new Float3(0, -8, 1.6), new Float3(0, 0, 0.8));
 
 	onInitializationUpdate(null);
 }).catch(reason => {

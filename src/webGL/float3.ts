@@ -247,6 +247,15 @@ export class Float3 {
 	//#endregion
 
 	//#region Instance Methods
+	normalize() {
+		const num = Float3.magnitude(this);
+		if (num > 9.99999974737875E-06 && num !== 1) {
+			this._x /= num;
+			this._y /= num;
+			this._z /= num;
+		}
+	}
+
 	equals(other: Float3) {
 		return (this === other)
 			|| (Math.abs(this._x - other._x) <= PRECISION && Math.abs(this._y - other._y) <= PRECISION && Math.abs(this._z - other._z) <= PRECISION);
