@@ -271,11 +271,11 @@ export class Float3 {
 		return new Float3(Math.abs(v._x), Math.abs(v._y), Math.abs(v._z));
 	}
 
-	static cross(a: Float3, b: Float3) {
-		return new Float3(
-			a._y * b._z - a._z * b._y,
-			a._z * b._x - a._x * b._z,
-			a._x * b._y - a._y * b._x);
+	static cross(a: Float3, b: Float3, out = new Float3()) {
+		out._x = a._y * b._z - a._z * b._y;
+		out._y = a._z * b._x - a._x * b._z;
+		out._z = a._x * b._y - a._y * b._x;
+		return out;
 	}
 
 	static distance(a: Float3, b: Float3) {

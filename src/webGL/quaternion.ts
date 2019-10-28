@@ -88,6 +88,25 @@ export class Quaternion {
 	}
 	//#endregion
 
+	//#region Operators
+	static mul(left: Quaternion, right: number, out?: Quaternion): Quaternion;
+	static mul(left: Quaternion, right: Quaternion, out?: Quaternion): Quaternion;
+	static mul(left: Quaternion, right: number | Quaternion, out = new Quaternion()) {
+		if (right instanceof Quaternion) {
+			out.x = left.w * right.x + left.x * right.w + left.y * right.z - left.z * right.y;
+			out.y = left.w * right.y - left.x * right.z + left.y * right.w + left.z * right.x;
+			out.z = left.w * right.z + left.x * right.y - left.y * right.x + left.z * right.w;
+			out.w = left.w * right.w - left.x * right.x - left.y * right.y - left.z * right.z;
+		} else {
+			out.x = left.x * right;
+			out.y = left.y * right;
+			out.z = left.z * right;
+			out.w = left.w * right;
+		}
+		return out;
+	}
+	//#endregion
+
 	//#region Instance Methods
 	conjugate() {
 		this._elements[0] = -this._elements[0];
@@ -136,7 +155,35 @@ export class Quaternion {
 	//#endregion
 
 	//#region Static Methods
-	dot(lhs: Quaternion, rhs: Quaternion): number {
+
+	/**
+	 * Creates a quaternion to rotate the start direction in a way
+	 * to look to the destination direction.
+	 * @param start The start direction.
+	 * @param destination The destination direction.
+	 * @param out Optional output quaternion to write the result to.
+	 */
+	static createFromToRotation(start: Float3, destination: Float3, out = new Quaternion()): Quaternion {
+		const from = start.normalized
+		const to = destination.normalized
+		const cosTheta = Float3.dot(from, to);
+		const axis = new Float3
+		if (cosTheta < 1 - PRECISION) {
+			Float3.cross(new Float3(0, 0, 1), from, axis);
+			if (axis.length < PRECISION) {
+				Float3.cross(new Float3(1, 0, 0), from, axis);
+			}
+			out.elements = [axis.x, axis.y, axis.z, 0];
+		} else {
+			Float3.cross(from, to, axis);
+			const s = Math.sqrt((1 + cosTheta) * 2);
+			const i = 1 / s;
+			out.elements = [axis.x * i, axis.y * i, axis.z * i, s * 0.5];
+		}
+		return out;
+	}
+
+	static dot(lhs: Quaternion, rhs: Quaternion): number {
 		return lhs._elements[0] * rhs._elements[0] + lhs._elements[1] * rhs._elements[1] + lhs._elements[2] * rhs._elements[2] + lhs._elements[3] * rhs._elements[3];
 	}
 

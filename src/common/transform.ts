@@ -115,19 +115,27 @@ export class Transform {
 
 	localSetPositionLookAt(position: Float3, lookAt: Float3, up: Float3 = new Float3(0, 0, 1)) {
 		debugger;
-		this._localPosition.xyz = position;
 		const forward = new Float3(0, 1, 0);
-		const forwardVector = Float3.sub(lookAt, position);
-		forwardVector.normalize();
-		const rotationAxis = Float3.cross(forward, forwardVector);
-		const dot = Float3.dot(forward, forwardVector);
-		this._localRotation.elements = [
-			rotationAxis.x,
-			rotationAxis.y,
-			rotationAxis.z,
-			dot + 1
-		];
-		this._localRotation.normalize();
-		console.log(this._localRotation);
+		const zero = Float3.zero;
+		const cforward = Float3.sub(lookAt, position);
+		if (cforward.equals(zero) || up.equals(zero)) {
+			this._localRotation.elements = [0, 0, 0, 1];
+		} else {
+			const nup = up.normalized;
+			cforward.normalize();
+			if (nup.equals(cforward)) {
+
+			} else {
+				const v = Float3.mul(nup, -Float3.dot(nup, cforward));
+				Float3.add(cforward, v, v);
+				const q = Quaternion.createFromToRotation(forward, v);
+				Quaternion.mul(Quaternion.createFromToRotation(v, cforward), q, this._localRotation);
+			}
+		}
+
+		console.log(this._localRotation.toString("Rotation"));
+
+
+		this._localPosition.xyz = position;
 	}
 };
