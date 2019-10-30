@@ -114,7 +114,7 @@ export class Transform {
 	}
 
 	localSetPositionLookAt(position: Float3, lookAt: Float3, up: Float3 = new Float3(0, 0, 1)) {
-		debugger;
+		// debugger;
 		const forward = new Float3(0, 1, 0);
 		const zero = Float3.zero;
 		const cforward = Float3.sub(lookAt, position);

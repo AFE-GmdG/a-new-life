@@ -1,8 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { get, set } from "@easm/core";
+import { useSceneStore } from "./store/applicationStore";
 
 import { Camera } from "./common/camera";
 import { Scene } from "./common/scene";
+import { CameraView } from "./components/cameraView";
 import { ProgressBar } from "./components/progressbar";
 import { ApplicationService, IApplicationService } from "./services/applicationService";
 import { Float3 } from "./webGL/float3";
@@ -81,6 +84,17 @@ swPromise.then(applicationService => {
 
 	// return createGame(canvas, applicationService, onInitializationUpdate, canvasTop, canvasFront, canvasRight);
 
+	const scene = new Scene("Scene 01");
+	const mainCamera = new Camera("Main Camera");
+	const additionalCamera = new Camera("Additional Camera");
+	scene.add(mainCamera);
+	scene.add(additionalCamera);
+	scene.activeCamera = mainCamera;
+	mainCamera.transform.localSetPositionLookAt(new Float3(0, -8, 1.6), new Float3(0, 0, 0.8));
+
+	const sceneStore = useSceneStore();
+	set(sceneStore.state.activeCamera, mainCamera);
+
 	const canvasRef = React.createRef<HTMLCanvasElement>();
 	const App: React.FC = _props => {
 
@@ -90,6 +104,7 @@ swPromise.then(applicationService => {
 		return (
 			<>
 				<canvas key="main-canvas" id="main-canvas" ref={ canvasRef }></canvas>
+				<CameraView />
 				<ProgressBar key="progress" percent={ progress } />
 			</>
 		);

@@ -256,6 +256,20 @@ export class Float3 {
 		}
 	}
 
+	update(f: Float3): void;
+	update(x: number, y: number, z: number): void;
+	update(x: Float3 | number, y?: number, z?: number) {
+		if (x instanceof Float3) {
+			this._x = x._x;
+			this._y = x._y;
+			this._z = x._z;
+		} else {
+			this._x = x;
+			this._y = y!;
+			this._z = z!;
+		}
+	}
+
 	equals(other: Float3) {
 		return (this === other)
 			|| (Math.abs(this._x - other._x) <= PRECISION && Math.abs(this._y - other._y) <= PRECISION && Math.abs(this._z - other._z) <= PRECISION);
