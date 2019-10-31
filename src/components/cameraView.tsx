@@ -10,7 +10,8 @@ const tableStyle: React.CSSProperties = {
 	right: "2rem",
 	width: "16rem",
 	border: "1px solid #000",
-	padding: "0 0.5rem"
+	padding: "0 0.5rem",
+	backgroundColor: "#4f4f4f"
 };
 
 const thStyle: React.CSSProperties = {

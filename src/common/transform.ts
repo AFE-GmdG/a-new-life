@@ -133,7 +133,7 @@ export class Transform {
 			}
 		}
 
-		console.log(this._localRotation.toString("Rotation"));
+		// console.log(this._localRotation.toString("Rotation"));
 
 
 		this._localPosition.xyz = position;
