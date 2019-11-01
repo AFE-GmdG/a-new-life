@@ -94,7 +94,13 @@ swPromise.then(applicationService => {
 	mainCamera.transform.localSetPositionLookAt(new Float3(0, -8, 1.6), new Float3(0, 0, 0.8));
 
 	const sceneStore = useSceneStore();
-	set(sceneStore.state.activeCamera, mainCamera);
+	set(sceneStore.state.activeCamera, {
+		location: {
+			x: mainCamera.transform.localPosition.x,
+			y: mainCamera.transform.localPosition.y,
+			z: mainCamera.transform.localPosition.z
+		}
+	});
 
 	const canvasRef = React.createRef<HTMLCanvasElement>();
 	const App: React.FC = _props => {

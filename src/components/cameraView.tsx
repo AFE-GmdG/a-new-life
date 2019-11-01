@@ -1,5 +1,5 @@
 import React from "react";
-import { get } from "@easm/core";
+import { get, set } from "@easm/core";
 
 import { useSceneStore } from "../store/applicationStore";
 import { Float3 } from "../webGL/float3";
@@ -27,13 +27,12 @@ const rangeInputStyle: React.CSSProperties = {
 };
 
 export const CameraView: React.FC = props => {
-	const { activeCamera } = useSceneStore(store => ({
-		activeCamera: get(store.state.activeCamera)
+	const { pos } = useSceneStore(store => ({
+		pos: get(store.state.activeCamera.location)
 	}));
-	const [pos, setCamperaPos] = React.useState<Float3>(new Float3(activeCamera.transform.localPosition));
-	const setPos = (newPos: Float3) => {
-		activeCamera.transform.localPosition.update(newPos)
-		setCamperaPos(newPos);
+	const setPos = (newPos: { x: number, y: number, z: number }) => {
+		const sceneStore = useSceneStore();
+		set(sceneStore.state.activeCamera.location, newPos);
 	};
 	const changePosX = (event: React.ChangeEvent<HTMLInputElement>) => setPos(new Float3(event.currentTarget.valueAsNumber, pos.y, pos.z));
 	const changePosY = (event: React.ChangeEvent<HTMLInputElement>) => setPos(new Float3(pos.x, event.currentTarget.valueAsNumber, pos.z));
