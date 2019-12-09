@@ -452,7 +452,7 @@ export abstract class ServiceWorkerServer {
         const serverHashItems = Object.keys(serverHashes).map(key => ({ key, uri: new URL(key, origin).href, hash: serverHashes[key] }));
         const localHashItems = Object.keys(localHashes).map(key => {
           const uri = new URL(key, origin).href;
-          if (localHashes && !localKeys.some(localKey => localKey.url === uri)) {
+          if (localHashes && !localKeys!.some(localKey => localKey.url === uri)) {
             delete localHashes[key];
           }
           return {
@@ -463,7 +463,7 @@ export abstract class ServiceWorkerServer {
         });
 
         // select and remove old/unnecessary files.
-        const toRemove = localKeys.reduce<Promise<boolean>[]>((acc, request) => {
+        const toRemove = localKeys!.reduce<Promise<boolean>[]>((acc, request) => {
           const serverHashItem = serverHashItems.find(serverHashItem => request.url === serverHashItem.uri);
           if (serverHashItem) {
             // Found the request in the new hashes.json from the server.
@@ -472,7 +472,7 @@ export abstract class ServiceWorkerServer {
               // The request is not found in the localHashItems or
               // it is found but the hash value is different from the server hash value.
               // This is a candidate to remove from cache.
-              acc.push(local.delete(request));
+              acc.push(local!.delete(request));
               // Try to remove this request from the localHashes.
               if (localHashes) {
                 delete localHashes[serverHashItem.key];
@@ -481,7 +481,7 @@ export abstract class ServiceWorkerServer {
           } else {
             // The request is not found in the new hashes.json from the server.
             // This is a candidate to remove from cache.
-            acc.push(local.delete(request));
+            acc.push(local!.delete(request));
           }
 
           return acc;
