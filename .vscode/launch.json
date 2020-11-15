@@ -9,7 +9,7 @@
 		"webRoot": "${workspaceFolder}/dist",
 		"preLaunchTask": "npm: start",
 		"runtimeArgs": [
-			"--load-extension=${env:LOCALAPPDATA}\\Google\\Chrome\\User Data\\Default\\Extensions\\fmkadmapgofadopljbjfkapdkoienihi\\4.2.0_0"
+			"--load-extension=${env:LOCALAPPDATA}\\Google\\Chrome\\User Data\\Default\\Extensions\\fmkadmapgofadopljbjfkapdkoienihi\\4.10.0_1"
 		],
 		"breakOnLoad": false,
 		"breakOnLoadStrategy": "instrument",

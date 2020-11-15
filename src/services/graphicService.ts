@@ -186,7 +186,7 @@ export function createGraphicService(
 			url: url.default as string
 		})))).then(urls => Promise.all(urls.map(url => new Promise<string>((resolve, reject) => {
 			const image = new Image();
-			image.onerror = reason => {
+			image.onerror = (reason: Event | string) => {
 				reject(reason);
 			};
 			image.onload = _ => {
@@ -273,7 +273,7 @@ export function createGraphicService(
 			url: url.default as string
 		})))).then(urls => Promise.all(urls.map(url => new Promise<string>((resolve, reject) => {
 			const image = new Image();
-			image.onerror = reason => {
+			image.onerror = (reason: Event | string) => {
 				reject(reason);
 			};
 			image.onload = _ => {

@@ -125,23 +125,24 @@ module.exports = (env) => [{
 		new webpack.IgnorePlugin(
 			/^@microsoft(\/|\\)typescript-etw$/
 		),
-		new CopyWebpackPlugin([{
-			from: path.resolve(cwd, "src/assets/*.*"),
-			to: path.resolve(cwd, "dist")
-		}, {
-			from: env === "dist" ? "../lib/worker/sw.min.js" : "../lib/worker/sw.js",
-			to: "sw.js"
-		}, {
-			from: "offline.json",
-			to: "offline.json"
-		},
-		...(env !== "dist")
-			? [{
-				from: "../lib/worker/sw.js.map",
-				to: "sw.js.map"
-			}]
-			: []], {
-			logLevel: "error"
+		new CopyWebpackPlugin({
+			patterns: [{
+				from: path.resolve(cwd, "src/assets"),
+				to: path.resolve(cwd, "dist/assets")
+			}, {
+				from: env === "dist" ? "../lib/worker/sw.min.js" : "../lib/worker/sw.js",
+				to: "sw.js"
+			}, {
+				from: "offline.json",
+				to: "offline.json"
+			},
+			...(env !== "dist")
+				? [{
+					from: "../lib/worker/sw.js.map",
+					to: "sw.js.map"
+				}]
+				: []
+			]
 		}),
 		new HtmlWebpackPlugin({
 			baseUrl: "/",
